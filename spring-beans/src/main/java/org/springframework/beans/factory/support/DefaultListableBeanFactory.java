@@ -971,7 +971,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	//---------------------------------------------------------------------
 	// Implementation of BeanDefinitionRegistry interface
 	//---------------------------------------------------------------------
-
+	//	将beanDefinition添加到相关集合中，并进行一些覆盖操作
+	//	1、将beanDefinition添加到beanDefinitionMap中
+	//	2、将beanName添加到beanDefinitionNames
+	//	3、manualSingletonNames中移除手动注册的单例bean
+	//	4、如果当前bean已经被注册过了且允许覆盖，销毁被覆盖bean的所有信息(包括父类依赖等)。
 	@Override
 	public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
 			throws BeanDefinitionStoreException {
@@ -991,6 +995,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
 		if (existingDefinition != null) {
+			// beanDefinition已存在，如果不允许覆盖，则抛出异常
 			if (!isAllowBeanDefinitionOverriding()) {
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
 			}
@@ -1016,17 +1021,23 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 							"] with [" + beanDefinition + "]");
 				}
 			}
+			// beanDefinition缓存到对应的map集合中
 			this.beanDefinitionMap.put(beanName, beanDefinition);
 		}
 		else {
+			// 有bean在创建，则同步处理
 			if (hasBeanCreationStarted()) {
 				// Cannot modify startup-time collection elements anymore (for stable iteration)
 				synchronized (this.beanDefinitionMap) {
+					// beanDefinition缓存到beanDefinitionMap集合中
 					this.beanDefinitionMap.put(beanName, beanDefinition);
+					// ArrayList添加是线程不安全的，顾新生成一个集合再赋值
 					List<String> updatedDefinitions = new ArrayList<>(this.beanDefinitionNames.size() + 1);
 					updatedDefinitions.addAll(this.beanDefinitionNames);
 					updatedDefinitions.add(beanName);
+					// beanDefinition name缓存到beanDefinitionNames集合中
 					this.beanDefinitionNames = updatedDefinitions;
+					// 如果当前beanName在手动注册的manualSingletonNames集合中，则移除
 					removeManualSingletonName(beanName);
 				}
 			}
@@ -1039,7 +1050,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			this.frozenBeanDefinitionNames = null;
 		}
 
+		// 发生了bean覆盖或者基于当前的beanName已经生成了一个单例bean了
 		if (existingDefinition != null || containsSingleton(beanName)) {
+			// 重置当前beanDefinition
 			resetBeanDefinition(beanName);
 		}
 		else if (isConfigurationFrozen()) {
@@ -1087,16 +1100,20 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	 * @see #registerBeanDefinition
 	 * @see #removeBeanDefinition
 	 */
+	// 重置beanDefinition(销毁对应的实例，并且重置关联的bean)
 	protected void resetBeanDefinition(String beanName) {
 		// Remove the merged bean definition for the given bean, if already created.
+		// 移除合并的beanDefinition
 		clearMergedBeanDefinition(beanName);
 
 		// Remove corresponding bean from singleton cache, if any. Shouldn't usually
 		// be necessary, rather just meant for overriding a context's default beans
 		// (e.g. the default StaticMessageSource in a StaticApplicationContext).
+		// 销毁单例bean
 		destroySingleton(beanName);
 
 		// Notify all post-processors that the specified bean definition has been reset.
+		// 合并beanDefinition的后置处理器
 		for (MergedBeanDefinitionPostProcessor processor : getBeanPostProcessorCache().mergedDefinition) {
 			processor.resetBeanDefinition(beanName);
 		}
@@ -1106,6 +1123,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			if (!beanName.equals(bdName)) {
 				BeanDefinition bd = this.beanDefinitionMap.get(bdName);
 				// Ensure bd is non-null due to potential concurrent modification of beanDefinitionMap.
+				// 如果存在已注册的beanDefinition的父类为当前beanName，也重置该bean
 				if (bd != null && beanName.equals(bd.getParentName())) {
 					resetBeanDefinition(bdName);
 				}
@@ -1155,6 +1173,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 	private void removeManualSingletonName(String beanName) {
+		// 查看manualSingletonNames集合里面是否包含beanName，如果有，则移除
 		updateManualSingletonNames(set -> set.remove(beanName), set -> set.contains(beanName));
 	}
 

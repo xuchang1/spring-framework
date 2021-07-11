@@ -88,8 +88,12 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+		// 构造函数初始化
+		// 初始化beanDefinition解析的reader和包扫描的scanner等类
 		this();
+		// 将当前配置文件注册为bean(没做过多的处理，例如对scan等注解的扫描加载bean)
 		register(componentClasses);
+		// 到步骤之前，只注册了传入的class的beanDefinition已经一些内置相关的beanDefinition
 		refresh();
 	}
 
@@ -165,6 +169,7 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		Assert.notEmpty(componentClasses, "At least one component class must be specified");
 		StartupStep registerComponentClass = this.getApplicationStartup().start("spring.context.component-classes.register")
 				.tag("classes", () -> Arrays.toString(componentClasses));
+		// 将当前输入的class注册为beanDefinition
 		this.reader.register(componentClasses);
 		registerComponentClass.end();
 	}
