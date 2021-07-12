@@ -34,6 +34,6 @@ public abstract class NativeDetector {
 	 * Returns {@code true} if invoked in the context of image building or during image runtime, else {@code false}.
 	 */
 	public static boolean inNativeImage() {
-		return imageCode;
+ 		return imageCode;
 	}
 }
