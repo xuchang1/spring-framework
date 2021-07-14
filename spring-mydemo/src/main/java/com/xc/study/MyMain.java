@@ -1,11 +1,9 @@
 package com.xc.study;
 
 import com.xc.study.config.MyConfig;
-import com.xc.study.entity.Person;
-import com.xc.study.entity.PersonFactoryBean;
+import com.xc.study.entity.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
 
 /**
  * @author changxu13
@@ -16,6 +14,13 @@ public class MyMain {
 		ApplicationContext context = new AnnotationConfigApplicationContext(MyConfig.class);
 //		Person person = context.getBean(Person.class);
 		Person person = (Person) context.getBean("personFactoryBean");
+
+		PersonAInterface personA = context.getBean(PersonAInterface.class);
+		personA.say();
+
+		PersonBInterface personB = context.getBean(PersonBInterface.class);
+		personB.say();
+
 		System.out.println(person);
 	}
 }

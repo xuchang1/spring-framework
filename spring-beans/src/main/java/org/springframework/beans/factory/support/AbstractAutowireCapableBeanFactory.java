@@ -623,12 +623,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (earlySingletonExposure) {
+			// 从一、二级缓存中获取对象(拿到了说明发生了循环依赖)
 			Object earlySingletonReference = getSingleton(beanName, false);
 			if (earlySingletonReference != null) {
+				// 地址未改变,不影响,直接返回早起引用对象
+				// 此处对aop动态代理的说明: 被自动动态代理的对象发生循环依赖,在将其从三级缓存移入二级缓存时,会对二级对象执行相关的bean后置处理器的逻辑处理,
+				// 例如AbstractAutoProxyCreator的after进行代理对象生成,这种情况下此处的earlySingletonReference即是代理对象。
+				// 而之后bean进行整个初始化生命周期时,AbstractAutoProxyCreator会判断当前bean已经生成过代理对象了,不会再对bean本身进行增强处理。
+				// 顾此处aop自动动态代理时为true并返回earlySingletonReference被增强的对象。
 				if (exposedObject == bean) {
 					exposedObject = earlySingletonReference;
 				}
 				else if (!this.allowRawInjectionDespiteWrapping && hasDependentBean(beanName)) {
+					// 到这一步,说明bean在整个生命周期中,地址发生了改变(被代理了),并且被其他已经创建完成的bean依赖了,则抛出异常
 					String[] dependentBeans = getDependentBeans(beanName);
 					Set<String> actualDependentBeans = new LinkedHashSet<>(dependentBeans.length);
 					for (String dependentBean : dependentBeans) {
@@ -1469,6 +1476,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			if (containsBean(propertyName)) {
 				Object bean = getBean(propertyName);
 				pvs.add(propertyName, bean);
+				// 注册依赖关系,循环依赖判断的时候会用到
 				registerDependentBean(propertyName, beanName);
 				if (logger.isTraceEnabled()) {
 					logger.trace("Added autowiring by name from bean name '" + beanName +
