@@ -267,6 +267,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
+			// 判断是否是FactoryBean对象,如果是再判断是需要返回FactoryBean还是其getObject()方法封装的对象
 			beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
 
@@ -1855,6 +1856,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * @param mbd the merged bean definition
 	 * @return the object to expose for the bean
 	 */
+	// 针对FactoryBean的处理,beanName传参单例缓存中的名称(一般是FactoryBean实现类的名称),name是实际getBean时的传参,可能携带前缀
+	// 1、name携带前缀且当前beanInstance是FactoryBean实现类,直接返回bean实例
+	// 2、name不携带前缀且当前beanInstance不是FactoryBean的实现类,说明是一个普通的bean对象,直接返回
+	// 3、name不携带前缀且当前beanInstance是FactoryBean的实现类,表示此时想获取的是FactoryBean封装的对象,调用其getObject()方法获取封装对象并缓存返回
 	protected Object getObjectForBeanInstance(
 			Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
 

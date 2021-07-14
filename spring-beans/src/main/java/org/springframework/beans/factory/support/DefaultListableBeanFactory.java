@@ -922,9 +922,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
 			// 当前bean不是抽象、懒加载且是单例的
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
-				// 当前bean是一个factoryBean
+				// 当前bean是一个factoryBean(FactoryBean在一级缓存中,存储的还是FactoryBean本身的对象,只是会基于传入的name是否携带前缀,判断是否调用其getObject()方法返回封装的对象)
 				if (isFactoryBean(beanName)) {
-					// 加前缀获取factoryBean本身的实例,进行实例化缓存
+					// 加前缀获取factoryBean本身的实例,存储到一级缓存中
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 					if (bean instanceof FactoryBean) {
 						FactoryBean<?> factory = (FactoryBean<?>) bean;
@@ -938,7 +938,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 							isEagerInit = (factory instanceof SmartFactoryBean &&
 									((SmartFactoryBean<?>) factory).isEagerInit());
 						}
-						// 如果当前factoryBean是SmartFactoryBean类型并且需要更早的初始化，在该处时直接获取bean并缓存
+						// 如果当前factoryBean是SmartFactoryBean类型并且需要更早的初始化，在该处时直接获取FactoryBean的getObject()方法封装的对象并缓存到factoryBeanObjectCache中
 						if (isEagerInit) {
 							getBean(beanName);
 						}
