@@ -315,6 +315,7 @@ public class ScheduledAnnotationBeanPostProcessor
 			}
 		}
 
+		// 后置的一些处理，例如如果未配置定时任务线程池，则配置一个默认的
 		this.registrar.afterPropertiesSet();
 	}
 
