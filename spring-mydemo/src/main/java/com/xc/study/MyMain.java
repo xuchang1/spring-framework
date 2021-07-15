@@ -18,6 +18,10 @@ public class MyMain {
 		PersonAInterface personA = context.getBean(PersonAInterface.class);
 		personA.say();
 
+		// 当前PersonA bean通过jdk动态代理生成了代理对象缓存在了beanFactory中,无法直接通过直接按PersonA类型的方式来获取,因为缓存的bean是接口类型,而不是PersonA类型
+//		PersonA personA = context.getBean(PersonA.class);
+//		personA.say();
+
 		PersonBInterface personB = context.getBean(PersonBInterface.class);
 		personB.say();
 

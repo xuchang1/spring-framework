@@ -1182,6 +1182,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		return getBeanFactory().getBean(name, args);
 	}
 
+	//根据类型获取bean时,需要注意一点,如果当前对象是一个jdk的代理对象,那么只能通过接口类型去获取bean,其类本身获取bean会失败,因为缓存的代理对象是基于接口实现的代理对象,与其本身类型并不匹配
 	@Override
 	public <T> T getBean(Class<T> requiredType) throws BeansException {
 		assertBeanFactoryActive();

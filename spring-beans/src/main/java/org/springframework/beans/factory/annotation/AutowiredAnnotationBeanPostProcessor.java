@@ -641,6 +641,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			}
 			if (value != null) {
 				ReflectionUtils.makeAccessible(field);
+				// 属性注入时,通过反射进行set
 				field.set(bean, value);
 			}
 		}
