@@ -253,6 +253,7 @@ public class ScheduledAnnotationBeanPostProcessor
 			Assert.state(this.beanFactory != null, "BeanFactory must be set to find scheduler by type");
 			try {
 				// Search for TaskScheduler bean...
+				// 1、基于TaskScheduler类型去获取定时任务bean
 				this.registrar.setTaskScheduler(resolveSchedulerBean(this.beanFactory, TaskScheduler.class, false));
 			}
 			catch (NoUniqueBeanDefinitionException ex) {
@@ -261,6 +262,7 @@ public class ScheduledAnnotationBeanPostProcessor
 							ex.getMessage());
 				}
 				try {
+					// 2、基于TaskScheduler类型及名称去获取定时任务bean
 					this.registrar.setTaskScheduler(resolveSchedulerBean(this.beanFactory, TaskScheduler.class, true));
 				}
 				catch (NoSuchBeanDefinitionException ex2) {
@@ -280,6 +282,7 @@ public class ScheduledAnnotationBeanPostProcessor
 				}
 				// Search for ScheduledExecutorService bean next...
 				try {
+					// 3、基于ScheduledExecutorService类型去获取定时任务bean
 					this.registrar.setScheduler(resolveSchedulerBean(this.beanFactory, ScheduledExecutorService.class, false));
 				}
 				catch (NoUniqueBeanDefinitionException ex2) {
@@ -288,6 +291,7 @@ public class ScheduledAnnotationBeanPostProcessor
 								ex2.getMessage());
 					}
 					try {
+						// 4、基于ScheduledExecutorService类型及名称去获取定时任务bean
 						this.registrar.setScheduler(resolveSchedulerBean(this.beanFactory, ScheduledExecutorService.class, true));
 					}
 					catch (NoSuchBeanDefinitionException ex3) {
@@ -353,6 +357,7 @@ public class ScheduledAnnotationBeanPostProcessor
 			return bean;
 		}
 
+		// 判断当前bean的类中是否包含被Scheduled或Schedules注解修饰的方法
 		Class<?> targetClass = AopProxyUtils.ultimateTargetClass(bean);
 		if (!this.nonAnnotatedClasses.contains(targetClass) &&
 				AnnotationUtils.isCandidateClass(targetClass, Arrays.asList(Scheduled.class, Schedules.class))) {
@@ -371,6 +376,7 @@ public class ScheduledAnnotationBeanPostProcessor
 			else {
 				// Non-empty set of methods
 				annotatedMethods.forEach((method, scheduledAnnotations) ->
+						// 解析Scheduled注解并丢到定时任务的队列中
 						scheduledAnnotations.forEach(scheduled -> processScheduled(scheduled, method, bean)));
 				if (logger.isTraceEnabled()) {
 					logger.trace(annotatedMethods.size() + " @Scheduled methods processed on bean '" + beanName +

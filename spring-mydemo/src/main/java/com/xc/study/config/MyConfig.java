@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @ComponentScan("com.xc.study")
 @EnableAsync
+@EnableScheduling
 public class MyConfig {
 
 //	@Bean
