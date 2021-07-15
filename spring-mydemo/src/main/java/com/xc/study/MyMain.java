@@ -2,6 +2,7 @@ package com.xc.study;
 
 import com.xc.study.config.MyConfig;
 import com.xc.study.entity.*;
+import com.xc.study.service.HelloService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -24,6 +25,9 @@ public class MyMain {
 
 		PersonBInterface personB = context.getBean(PersonBInterface.class);
 		personB.say();
+
+		HelloService helloService = context.getBean(HelloService.class);
+		helloService.say();
 
 		System.out.println(person);
 	}

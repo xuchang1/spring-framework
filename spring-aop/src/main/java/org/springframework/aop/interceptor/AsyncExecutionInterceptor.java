@@ -97,6 +97,7 @@ public class AsyncExecutionInterceptor extends AsyncExecutionAspectSupport imple
 	 * @return {@link Future} if the original method returns {@code Future}; {@code null}
 	 * otherwise.
 	 */
+	// 拦截@Async注解方法的执行逻辑
 	@Override
 	@Nullable
 	public Object invoke(final MethodInvocation invocation) throws Throwable {
@@ -104,6 +105,7 @@ public class AsyncExecutionInterceptor extends AsyncExecutionAspectSupport imple
 		Method specificMethod = ClassUtils.getMostSpecificMethod(invocation.getMethod(), targetClass);
 		final Method userDeclaredMethod = BridgeMethodResolver.findBridgedMethod(specificMethod);
 
+		// 获取当前注解使用的线程池实例
 		AsyncTaskExecutor executor = determineAsyncExecutor(userDeclaredMethod);
 		if (executor == null) {
 			throw new IllegalStateException(
@@ -155,6 +157,7 @@ public class AsyncExecutionInterceptor extends AsyncExecutionAspectSupport imple
 	@Nullable
 	protected Executor getDefaultExecutor(@Nullable BeanFactory beanFactory) {
 		Executor defaultExecutor = super.getDefaultExecutor(beanFactory);
+		// 未配置对应线程池时,默认创建一个SimpleAsyncTaskExecutor线程池，其执行逻辑是通过threadFactory来获取线程池进行执行(正常情况下就是new一个线程进行异步执行)
 		return (defaultExecutor != null ? defaultExecutor : new SimpleAsyncTaskExecutor());
 	}
 

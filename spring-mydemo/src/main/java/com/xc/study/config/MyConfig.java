@@ -4,6 +4,8 @@ import com.xc.study.entity.Person;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author changxu13
@@ -11,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ComponentScan("com.xc.study")
+@EnableAsync
 public class MyConfig {
 
 //	@Bean

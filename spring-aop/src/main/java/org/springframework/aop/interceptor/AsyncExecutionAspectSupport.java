@@ -90,6 +90,7 @@ public abstract class AsyncExecutionAspectSupport implements BeanFactoryAware {
 	 * executor will be looked up at invocation time against the enclosing bean factory
 	 */
 	public AsyncExecutionAspectSupport(@Nullable Executor defaultExecutor) {
+		// 构造函数中初始化默认线程池设置逻辑
 		this.defaultExecutor = new SingletonSupplier<>(defaultExecutor, () -> getDefaultExecutor(this.beanFactory));
 		this.exceptionHandler = SingletonSupplier.of(SimpleAsyncUncaughtExceptionHandler::new);
 	}
@@ -196,22 +197,6 @@ public abstract class AsyncExecutionAspectSupport implements BeanFactoryAware {
 	protected abstract String getExecutorQualifier(Method method);
 
 	/**
-	 * Retrieve a target executor for the given qualifier.
-	 * @param qualifier the qualifier to resolve
-	 * @return the target executor, or {@code null} if none available
-	 * @since 4.2.6
-	 * @see #getExecutorQualifier(Method)
-	 */
-	@Nullable
-	protected Executor findQualifiedExecutor(@Nullable BeanFactory beanFactory, String qualifier) {
-		if (beanFactory == null) {
-			throw new IllegalStateException("BeanFactory must be set on " + getClass().getSimpleName() +
-					" to access qualified executor '" + qualifier + "'");
-		}
-		return BeanFactoryAnnotationUtils.qualifiedBeanOfType(beanFactory, Executor.class, qualifier);
-	}
-
-	/**
 	 * Retrieve or build a default executor for this advice instance.
 	 * An executor returned from here will be cached for further use.
 	 * <p>The default implementation searches for a unique {@link TaskExecutor} bean
@@ -230,11 +215,13 @@ public abstract class AsyncExecutionAspectSupport implements BeanFactoryAware {
 				// Search for TaskExecutor bean... not plain Executor since that would
 				// match with ScheduledExecutorService as well, which is unusable for
 				// our purposes here. TaskExecutor is more clearly designed for it.
+				// 1、根据TaskExecutor类型获取
 				return beanFactory.getBean(TaskExecutor.class);
 			}
 			catch (NoUniqueBeanDefinitionException ex) {
 				logger.debug("Could not find unique TaskExecutor bean", ex);
 				try {
+					// 根据TaskExecutor类型获取到多个实例时,则根据taskExecutor名称及Executor类型获取实例
 					return beanFactory.getBean(DEFAULT_TASK_EXECUTOR_BEAN_NAME, Executor.class);
 				}
 				catch (NoSuchBeanDefinitionException ex2) {
@@ -248,6 +235,7 @@ public abstract class AsyncExecutionAspectSupport implements BeanFactoryAware {
 			catch (NoSuchBeanDefinitionException ex) {
 				logger.debug("Could not find default TaskExecutor bean", ex);
 				try {
+					// 没有TaskExecutor类型时,根据taskExecutor名称及Executor类型,获取实例
 					return beanFactory.getBean(DEFAULT_TASK_EXECUTOR_BEAN_NAME, Executor.class);
 				}
 				catch (NoSuchBeanDefinitionException ex2) {
@@ -258,6 +246,22 @@ public abstract class AsyncExecutionAspectSupport implements BeanFactoryAware {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Retrieve a target executor for the given qualifier.
+	 * @param qualifier the qualifier to resolve
+	 * @return the target executor, or {@code null} if none available
+	 * @since 4.2.6
+	 * @see #getExecutorQualifier(Method)
+	 */
+	@Nullable
+	protected Executor findQualifiedExecutor(@Nullable BeanFactory beanFactory, String qualifier) {
+		if (beanFactory == null) {
+			throw new IllegalStateException("BeanFactory must be set on " + getClass().getSimpleName() +
+					" to access qualified executor '" + qualifier + "'");
+		}
+		return BeanFactoryAnnotationUtils.qualifiedBeanOfType(beanFactory, Executor.class, qualifier);
 	}
 
 
