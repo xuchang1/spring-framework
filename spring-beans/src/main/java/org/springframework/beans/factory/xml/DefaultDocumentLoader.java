@@ -73,7 +73,9 @@ public class DefaultDocumentLoader implements DocumentLoader {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Using JAXP provider [" + factory.getClass().getName() + "]");
 		}
+		// Document构造器
 		DocumentBuilder builder = createDocumentBuilder(factory, entityResolver, errorHandler);
+		// 解析xml文件内容为Document对象
 		return builder.parse(inputSource);
 	}
 
@@ -94,6 +96,7 @@ public class DefaultDocumentLoader implements DocumentLoader {
 		if (validationMode != XmlValidationModeDetector.VALIDATION_NONE) {
 			factory.setValidating(true);
 			if (validationMode == XmlValidationModeDetector.VALIDATION_XSD) {
+				// XSD 模式下，强制设置命名空间支持
 				// Enforce namespace aware for XSD...
 				factory.setNamespaceAware(true);
 				try {
