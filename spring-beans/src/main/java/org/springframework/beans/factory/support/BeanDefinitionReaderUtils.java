@@ -136,6 +136,7 @@ public abstract class BeanDefinitionReaderUtils {
 	 * @return the unique bean name to use
 	 * @since 5.1
 	 */
+	// #数字迭代，保证唯一性
 	public static String uniqueBeanName(String beanName, BeanDefinitionRegistry registry) {
 		String id = beanName;
 		int counter = -1;

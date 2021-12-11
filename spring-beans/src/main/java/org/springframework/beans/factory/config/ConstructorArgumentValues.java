@@ -120,6 +120,8 @@ public class ConstructorArgumentValues {
 	 * @param newValue the argument value in the form of a ValueHolder
 	 */
 	private void addOrMergeIndexedArgumentValue(Integer key, ValueHolder newValue) {
+		// key-value的形式缓存当前的构造参数位置及值
+		// 如果当前的值是可以merge的，基于老值进行merge操作并存储
 		ValueHolder currentValue = this.indexedArgumentValues.get(key);
 		if (currentValue != null && newValue.getValue() instanceof Mergeable) {
 			Mergeable mergeable = (Mergeable) newValue.getValue();
@@ -229,6 +231,7 @@ public class ConstructorArgumentValues {
 		if (newValue.getName() != null) {
 			for (Iterator<ValueHolder> it = this.genericArgumentValues.iterator(); it.hasNext();) {
 				ValueHolder currentValue = it.next();
+				// name设置相同，判断是否能够进行merge
 				if (newValue.getName().equals(currentValue.getName())) {
 					if (newValue.getValue() instanceof Mergeable) {
 						Mergeable mergeable = (Mergeable) newValue.getValue();

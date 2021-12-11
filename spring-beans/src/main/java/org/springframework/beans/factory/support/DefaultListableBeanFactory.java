@@ -1006,6 +1006,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
 			}
 			else if (existingDefinition.getRole() < beanDefinition.getRole()) {
+				// 已经存在的beanDefinition的role大于当前beanDefinition的role，打印info日志
 				// e.g. was ROLE_APPLICATION, now overriding with ROLE_SUPPORT or ROLE_INFRASTRUCTURE
 				if (logger.isInfoEnabled()) {
 					logger.info("Overriding user-defined bean definition for bean '" + beanName +
@@ -1014,6 +1015,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 			else if (!beanDefinition.equals(existingDefinition)) {
+				// 覆盖 beanDefinition 与 被覆盖的 beanDefinition 不相同，打印 debug 日志
 				if (logger.isDebugEnabled()) {
 					logger.debug("Overriding bean definition for bean '" + beanName +
 							"' with a different definition: replacing [" + existingDefinition +
@@ -1022,12 +1024,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			else {
 				if (logger.isTraceEnabled()) {
+					// 其它，打印 trace 日志
 					logger.trace("Overriding bean definition for bean '" + beanName +
 							"' with an equivalent definition: replacing [" + existingDefinition +
 							"] with [" + beanDefinition + "]");
 				}
 			}
-			// beanDefinition缓存到对应的map集合中
+			// 允许覆盖，直接缓存覆盖
 			this.beanDefinitionMap.put(beanName, beanDefinition);
 		}
 		else {
@@ -1037,6 +1040,8 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				synchronized (this.beanDefinitionMap) {
 					// beanDefinition缓存到beanDefinitionMap集合中
 					this.beanDefinitionMap.put(beanName, beanDefinition);
+
+					// 添加beanName到beanDefinitionNames中
 					// ArrayList添加是线程不安全的，顾新生成一个集合再赋值
 					List<String> updatedDefinitions = new ArrayList<>(this.beanDefinitionNames.size() + 1);
 					updatedDefinitions.addAll(this.beanDefinitionNames);
