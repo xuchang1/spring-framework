@@ -207,6 +207,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 * @param name the user-specified name
 	 * @return the transformed name
 	 */
+	// 在别名映射中，根据name找到对应的beanName，循环迭代知道beanName在别名映射中不存在值时返回
 	public String canonicalName(String name) {
 		String canonicalName = name;
 		// Handle aliasing...
