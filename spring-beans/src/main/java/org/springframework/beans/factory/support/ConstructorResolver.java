@@ -124,20 +124,26 @@ class ConstructorResolver {
 	 * or {@code null} if none (-> use constructor argument values from bean definition)
 	 * @return a BeanWrapper for the new instance
 	 */
+	// 和上一步的FactoryBean工厂方法的逻辑类似，确定构造函数及传参，然后进行实例化
 	public BeanWrapper autowireConstructor(String beanName, RootBeanDefinition mbd,
 			@Nullable Constructor<?>[] chosenCtors, @Nullable Object[] explicitArgs) {
-
+		// 封装 BeanWrapperImpl 对象，并完成初始化
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
+		// 构造函数
 		Constructor<?> constructorToUse = null;
+		// 构造参数
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
 
+		// 确定构造参数
+		// 如果 getBean() 已经传递，则直接使用
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
 		else {
+			// 尝试从缓存中获取
 			Object[] argsToResolve = null;
 			synchronized (mbd.constructorArgumentLock) {
 				constructorToUse = (Constructor<?>) mbd.resolvedConstructorOrFactoryMethod;
@@ -150,10 +156,14 @@ class ConstructorResolver {
 				}
 			}
 			if (argsToResolve != null) {
+				// 缓存中存在,则解析存储在 BeanDefinition 中的参数
+				// 如给定方法的构造函数 A(int ,int )，则通过此方法后就会把配置文件中的("1","1")转换为 (1,1)
+				// 缓存中的值可能是原始值也有可能是最终值
 				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve);
 			}
 		}
 
+		// 没有缓存，则尝试从配置文件中获取参数
 		if (constructorToUse == null || argsToUse == null) {
 			// Take specified constructors, if any.
 			Constructor<?>[] candidates = chosenCtors;
@@ -183,9 +193,11 @@ class ConstructorResolver {
 				}
 			}
 
+			// 是否需要解析构造器
 			// Need to resolve the constructor.
 			boolean autowiring = (chosenCtors != null ||
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
+			// 用于承载解析后的构造函数参数的值
 			ConstructorArgumentValues resolvedValues = null;
 
 			int minNrOfArgs;
@@ -198,11 +210,15 @@ class ConstructorResolver {
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
 
+			// 对构造函数进行排序处理
+			// public 构造函数优先非public 构造函数参数数量降序，参数数量降序
 			AutowireUtils.sortConstructors(candidates);
+			// 最小参数类型权重
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Constructor<?>> ambiguousConstructors = null;
 			Deque<UnsatisfiedDependencyException> causes = null;
 
+			// 迭代所有构造函数
 			for (Constructor<?> candidate : candidates) {
 				int parameterCount = candidate.getParameterCount();
 
@@ -507,17 +523,19 @@ class ConstructorResolver {
 			}
 
 			// 排序构造函数
-			// public 构造函数优先参数数量降序，非 public 构造函数参数数量降序
+			// public 构造函数优先非 public 构造函数参数数量降序,然后参数数量降序
 			if (candidates.size() > 1) {  // explicitly skip immutable singletonList
 				candidates.sort(AutowireUtils.EXECUTABLE_COMPARATOR);
 			}
 
 			// 用于承载解析后的构造函数参数的值
 			ConstructorArgumentValues resolvedValues = null;
+			// 是否使用构造函数进行装配
 			boolean autowiring = (mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Method> ambiguousFactoryMethods = null;
 
+			// 入参个数的最小值
 			int minNrOfArgs;
 			if (explicitArgs != null) {
 				minNrOfArgs = explicitArgs.length;
@@ -561,7 +579,7 @@ class ConstructorResolver {
 						try {
 							String[] paramNames = null;
 							ParameterNameDiscoverer pnd = this.beanFactory.getParameterNameDiscoverer();
-							// 获取指定构造函数的参数名称
+							// 解析方法的参数名称
 							if (pnd != null) {
 								paramNames = pnd.getParameterNames(candidate);
 							}
@@ -618,7 +636,7 @@ class ConstructorResolver {
 				}
 			}
 
-			// 没有可执行的工厂方法，抛出异常
+			// 没有可执行的工厂方法，抛出异常（该处if逻辑是进行异常信息拼接的）
 			if (factoryMethodToUse == null || argsToUse == null) {
 				if (causes != null) {
 					UnsatisfiedDependencyException ex = causes.removeLast();

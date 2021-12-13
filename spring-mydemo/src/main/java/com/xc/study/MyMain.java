@@ -15,6 +15,7 @@ public class MyMain {
 		ApplicationContext context = new AnnotationConfigApplicationContext(MyConfig.class);
 //		Person person = context.getBean(Person.class);
 		Person person = (Person) context.getBean("personFactoryBean");
+		System.out.println(person);
 
 		PersonAInterface personA = context.getBean(PersonAInterface.class);
 		personA.say();
@@ -23,12 +24,10 @@ public class MyMain {
 //		PersonA personA = context.getBean(PersonA.class);
 //		personA.say();
 
-		PersonBInterface personB = context.getBean(PersonBInterface.class);
-		personB.say();
-
-		HelloService helloService = context.getBean(HelloService.class);
-		helloService.say();
-
-		System.out.println(person);
+//		PersonBInterface personB = context.getBean(PersonBInterface.class);
+//		personB.say();
+//
+//		HelloService helloService = context.getBean(HelloService.class);
+//		helloService.say();
 	}
 }

@@ -1224,7 +1224,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				}
 			}
 		}
-		// 已经解析好了，直接注入即可
+		// 3、已经解析好了，直接注入即可
 		if (resolved) {
 			// <3.1> autowire 自动注入，调用构造函数自动注入
 			if (autowireNecessary) {
@@ -1353,6 +1353,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						getAccessControlContext());
 			}
 			else {
+				// 获得 InstantiationStrategy 对象，并使用它，创建 Bean 对象
 				beanInstance = getInstantiationStrategy().instantiate(mbd, beanName, this);
 			}
 			BeanWrapper bw = new BeanWrapperImpl(beanInstance);
@@ -1411,7 +1412,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	@SuppressWarnings("deprecation")  // for postProcessPropertyValues
 	protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) {
+		// 没有实例化对象
 		if (bw == null) {
+			// 有属性，则抛出 BeanCreationException 异常
 			if (mbd.hasPropertyValues()) {
 				throw new BeanCreationException(
 						mbd.getResourceDescription(), beanName, "Cannot apply property values to null instance");
@@ -1425,17 +1428,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Give any InstantiationAwareBeanPostProcessors the opportunity to modify the
 		// state of the bean before properties are set. This can be used, for example,
 		// to support styles of field injection.
+		// bean 不是"合成"的，即未由应用程序本身定义
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
-				// 实例化之后的处理逻辑,这块主要用于判断是否进行后续的依赖注入处理
+				// 实例化之后的处理逻辑(可修改bean本身的一些信息),这块主要用于判断是否进行后续的依赖注入处理
 				if (!bp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
 					return;
 				}
 			}
 		}
 
+		// bean中的属性值
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 
+		// 自动注入模式
 		int resolvedAutowireMode = mbd.getResolvedAutowireMode();
 		if (resolvedAutowireMode == AUTOWIRE_BY_NAME || resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
 			MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
@@ -1452,7 +1458,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			pvs = newPvs;
 		}
 
+		// 是否已经注册了 InstantiationAwareBeanPostProcessors
 		boolean hasInstAwareBpps = hasInstantiationAwareBeanPostProcessors();
+		// 是否需要进行【依赖检查】
 		boolean needsDepCheck = (mbd.getDependencyCheck() != AbstractBeanDefinition.DEPENDENCY_CHECK_NONE);
 
 		PropertyDescriptor[] filteredPds = null;
@@ -1462,6 +1470,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 			for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
 				// 实例化的BeanPostProcessor执行postProcessProperties方法(注入)
+				// 对所有需要依赖检查的属性进行后置处理
 				PropertyValues pvsToUse = bp.postProcessProperties(pvs, bw.getWrappedInstance(), beanName);
 				if (pvsToUse == null) {
 					if (filteredPds == null) {
@@ -1475,13 +1484,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				pvs = pvsToUse;
 			}
 		}
+
+		// <4> 依赖检查
 		if (needsDepCheck) {
 			if (filteredPds == null) {
 				filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
 			}
+			// 依赖检查，对应 depends-on 属性
 			checkDependencies(beanName, mbd, filteredPds, pvs);
 		}
 
+		// <5> 将属性应用到 bean 中
 		if (pvs != null) {
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
@@ -1496,12 +1509,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @param bw the BeanWrapper from which we can obtain information about the bean
 	 * @param pvs the PropertyValues to register wired objects with
 	 */
+	// 根据名称，将propertyName -> 对应的bean对象关系维护到pvs中
 	protected void autowireByName(
 			String beanName, AbstractBeanDefinition mbd, BeanWrapper bw, MutablePropertyValues pvs) {
-
+		// <1> 获取 Bean 对象中非简单属性（即对象属性，8种基本类型会被忽略）
 		String[] propertyNames = unsatisfiedNonSimpleProperties(mbd, bw);
+		// 遍历 propertyName 数组
 		for (String propertyName : propertyNames) {
+			// 如果容器中包含指定名称的 bean，则将该 bean 注入到 bean中
 			if (containsBean(propertyName)) {
+				// 递归初始化相关 bean
 				Object bean = getBean(propertyName);
 				pvs.add(propertyName, bean);
 				// 注册依赖关系,循环依赖判断的时候会用到
@@ -1534,28 +1551,36 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected void autowireByType(
 			String beanName, AbstractBeanDefinition mbd, BeanWrapper bw, MutablePropertyValues pvs) {
 
+		// 获取 TypeConverter 实例
+		// 使用自定义的 TypeConverter，用于取代默认的 PropertyEditor 机制
 		TypeConverter converter = getCustomTypeConverter();
 		if (converter == null) {
 			converter = bw;
 		}
 
 		Set<String> autowiredBeanNames = new LinkedHashSet<>(4);
+		// 获取非简单属性
 		String[] propertyNames = unsatisfiedNonSimpleProperties(mbd, bw);
 		for (String propertyName : propertyNames) {
 			try {
+				// 属性描述符
 				PropertyDescriptor pd = bw.getPropertyDescriptor(propertyName);
 				// Don't try autowiring by type for type Object: never makes sense,
 				// even if it technically is a unsatisfied, non-simple property.
 				if (Object.class != pd.getPropertyType()) {
+					// 写方法的参数（一般就是set方法的参数）
 					MethodParameter methodParam = BeanUtils.getWriteMethodParameter(pd);
 					// Do not allow eager init for type matching in case of a prioritized post-processor.
 					boolean eager = !(bw.getWrappedInstance() instanceof PriorityOrdered);
 					DependencyDescriptor desc = new AutowireByTypeDependencyDescriptor(methodParam, eager);
+					// 解析指定 beanName 的属性所匹配的值，并把解析到的属性名称存储在 autowiredBeanNames 中
+					// 当属性存在过个封装 bean 时将会找到所有匹配的 bean 并将其注入
 					Object autowiredArgument = resolveDependency(desc, beanName, autowiredBeanNames, converter);
 					if (autowiredArgument != null) {
 						pvs.add(propertyName, autowiredArgument);
 					}
 					for (String autowiredBeanName : autowiredBeanNames) {
+						// 属性依赖注入
 						registerDependentBean(autowiredBeanName, beanName);
 						if (logger.isTraceEnabled()) {
 							logger.trace("Autowiring by type from bean name '" + beanName + "' via property '" +
@@ -1581,11 +1606,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * @return an array of bean property names
 	 * @see org.springframework.beans.BeanUtils#isSimpleProperty
 	 */
+	// 判断返回需要依赖注入的属性名称
 	protected String[] unsatisfiedNonSimpleProperties(AbstractBeanDefinition mbd, BeanWrapper bw) {
 		Set<String> result = new TreeSet<>();
 		PropertyValues pvs = mbd.getPropertyValues();
+		// 属性的描述符
 		PropertyDescriptor[] pds = bw.getPropertyDescriptors();
 		for (PropertyDescriptor pd : pds) {
+			// 有可写方法（一般就是set方法这种）、依赖检查中未被忽略、pvs 不包含该属性名、不是简单属性类型
 			if (pd.getWriteMethod() != null && !isExcludedFromDependencyCheck(pd) && !pvs.contains(pd.getName()) &&
 					!BeanUtils.isSimpleProperty(pd.getPropertyType())) {
 				result.add(pd.getName());
@@ -1702,6 +1730,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			if (mpvs.isConverted()) {
 				// Shortcut: use the pre-converted values as-is.
 				try {
+					// 为实例化对象设置属性值 ，依赖注入真真正正地实现在此
 					bw.setPropertyValues(mpvs);
 					return;
 				}
@@ -1713,6 +1742,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			original = mpvs.getPropertyValueList();
 		}
 		else {
+			// 如果 pvs 不是 MutablePropertyValues 类型，则直接使用原始类型
 			original = Arrays.asList(pvs.getPropertyValues());
 		}
 
@@ -1725,6 +1755,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Create a deep copy, resolving any references for values.
 		List<PropertyValue> deepCopy = new ArrayList<>(original.size());
 		boolean resolveNecessary = false;
+		// 遍历属性，将属性转换为对应类的对应属性的类型
 		for (PropertyValue pv : original) {
 			if (pv.isConverted()) {
 				deepCopy.add(pv);
@@ -1771,6 +1802,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Set our (possibly massaged) deep copy.
+		// 进行属性依赖注入，依赖注入的真真正正实现依赖的注入方法在此！！！
 		try {
 			bw.setPropertyValues(new MutablePropertyValues(deepCopy));
 		}
