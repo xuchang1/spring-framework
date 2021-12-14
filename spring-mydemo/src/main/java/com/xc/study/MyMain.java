@@ -14,8 +14,8 @@ public class MyMain {
 	public static void main(String[] args) {
 		ApplicationContext context = new AnnotationConfigApplicationContext(MyConfig.class);
 //		Person person = context.getBean(Person.class);
-		Person person = (Person) context.getBean("personFactoryBean");
-		System.out.println(person);
+//		Person person = (Person) context.getBean("personFactoryBean");
+//		System.out.println(person);
 
 		PersonAInterface personA = context.getBean(PersonAInterface.class);
 		personA.say();

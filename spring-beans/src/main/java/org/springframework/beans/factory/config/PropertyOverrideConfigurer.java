@@ -131,9 +131,12 @@ public class PropertyOverrideConfigurer extends PropertyResourceConfigurer {
 			throw new BeanInitializationException("Invalid key '" + key +
 					"': expected 'beanName" + this.beanNameSeparator + "property'");
 		}
+
+		// 根据"."号，解析bean的名称及属性，并将该bean中的属性值进行替换
 		String beanName = key.substring(0, separatorIndex);
 		String beanProperty = key.substring(separatorIndex + 1);
 		this.beanNames.add(beanName);
+		// 进行bean的属性值替换
 		applyPropertyValue(factory, beanName, beanProperty, value);
 		if (logger.isDebugEnabled()) {
 			logger.debug("Property '" + key + "' set to value [" + value + "]");

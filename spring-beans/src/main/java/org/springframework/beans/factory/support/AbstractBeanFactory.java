@@ -951,6 +951,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	@Override
+	public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
+		Assert.notNull(beanPostProcessor, "BeanPostProcessor must not be null");
+		// Remove from old position, if any
+		this.beanPostProcessors.remove(beanPostProcessor);
+		// Add to end of list
+		this.beanPostProcessors.add(beanPostProcessor);
+	}
+
+	@Override
 	@Nullable
 	public String resolveEmbeddedValue(@Nullable String value) {
 		if (value == null) {
@@ -964,15 +973,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
-		Assert.notNull(beanPostProcessor, "BeanPostProcessor must not be null");
-		// Remove from old position, if any
-		this.beanPostProcessors.remove(beanPostProcessor);
-		// Add to end of list
-		this.beanPostProcessors.add(beanPostProcessor);
 	}
 
 	/**
