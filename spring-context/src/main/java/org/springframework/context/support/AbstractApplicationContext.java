@@ -422,6 +422,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Publish event via parent context as well...
+		// 事件发送给附件容器
 		if (this.parent != null) {
 			if (this.parent instanceof AbstractApplicationContext) {
 				((AbstractApplicationContext) this.parent).publishEvent(event, eventType);

@@ -33,6 +33,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 1.1
  */
+// 不同的实例化策略
 public interface InstantiationStrategy {
 
 	/**

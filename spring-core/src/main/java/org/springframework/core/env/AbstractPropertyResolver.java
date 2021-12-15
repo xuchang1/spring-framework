@@ -226,6 +226,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 		if (value.isEmpty()) {
 			return value;
 		}
+		// 是否对不可解析的占位符进行处理，忽略或者抛出异常
 		return (this.ignoreUnresolvableNestedPlaceholders ?
 				resolvePlaceholders(value) : resolveRequiredPlaceholders(value));
 	}
