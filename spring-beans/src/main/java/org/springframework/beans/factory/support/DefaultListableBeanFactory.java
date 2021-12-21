@@ -1350,6 +1350,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			// 针对给定的工厂给定一个快捷实现的方式，例如考虑一些预先解析的信息
 			// 在进入所有bean的常规类型匹配算法之前，解析算法将首先尝试通过此方法解析快捷方式。
 			// 子类可以覆盖此方法
+			// ShortcutDependencyDescriptor类，在依赖注入时有用到
 			Object shortcut = descriptor.resolveShortcut(this);
 			if (shortcut != null) {
 				return shortcut;
@@ -1357,10 +1358,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 			// 依赖的类型
 			Class<?> type = descriptor.getDependencyType();
-			// 支持 Spring 的注解 @value
+			// Spring 的注解 @value 在该处解析（QualifierAnnotationAutowireCandidateResolver）,获取的是注解中的内容
 			Object value = getAutowireCandidateResolver().getSuggestedValue(descriptor);
 			if (value != null) {
 				if (value instanceof String) {
+					// 内置的解析器，会从环境变量中解析${}占位符，获取对应的值
 					String strVal = resolveEmbeddedValue((String) value);
 					BeanDefinition bd = (beanName != null && containsBean(beanName) ?
 							getMergedBeanDefinition(beanName) : null);
@@ -1424,6 +1426,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				instanceCandidate = entry.getValue();
 			}
 
+			// 依赖的beanName缓存
 			if (autowiredBeanNames != null) {
 				autowiredBeanNames.add(autowiredBeanName);
 			}
@@ -1594,9 +1597,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	protected Map<String, Object> findAutowireCandidates(
 			@Nullable String beanName, Class<?> requiredType, DependencyDescriptor descriptor) {
 
+		// 根据requiredType，找出候选的beanName集合
 		String[] candidateNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 				this, requiredType, true, descriptor.isEager());
 		Map<String, Object> result = CollectionUtils.newLinkedHashMap(candidateNames.length);
+
+		// 依赖的缓存里面，先直接查询
 		for (Map.Entry<Class<?>, Object> classObjectEntry : this.resolvableDependencies.entrySet()) {
 			Class<?> autowiringType = classObjectEntry.getKey();
 			if (autowiringType.isAssignableFrom(requiredType)) {
@@ -1609,6 +1615,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 		}
 		for (String candidate : candidateNames) {
+			// 没有相关性且是被注入的候选者
 			if (!isSelfReference(beanName, candidate) && isAutowireCandidate(candidate, descriptor)) {
 				addCandidateEntry(result, candidate, descriptor, requiredType);
 			}
@@ -1821,6 +1828,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	 * i.e. whether the candidate points back to the original bean or to a factory method
 	 * on the original bean.
 	 */
+	// 判断两个名称是否有相关性，相等或者beanName等于candidateName对应的factoryBeanName
 	private boolean isSelfReference(@Nullable String beanName, @Nullable String candidateName) {
 		return (beanName != null && candidateName != null &&
 				(beanName.equals(candidateName) || (containsBeanDefinition(candidateName) &&

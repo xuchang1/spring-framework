@@ -111,11 +111,13 @@ public class InjectionMetadata {
 	}
 
 	public void inject(Object target, @Nullable String beanName, @Nullable PropertyValues pvs) throws Throwable {
+		// 被修饰的方法或属性集合
 		Collection<InjectedElement> checkedElements = this.checkedElements;
 		Collection<InjectedElement> elementsToIterate =
 				(checkedElements != null ? checkedElements : this.injectedElements);
 		if (!elementsToIterate.isEmpty()) {
 			for (InjectedElement element : elementsToIterate) {
+				// 遍历进行注入操作
 				element.inject(target, beanName, pvs);
 			}
 		}
@@ -247,6 +249,7 @@ public class InjectionMetadata {
 		 * an explicit property value having been specified. Also marks the
 		 * affected property as processed for other processors to ignore it.
 		 */
+		// pvs中是否已经包含了方法参数中需要注入的属性值
 		protected boolean checkPropertySkipping(@Nullable PropertyValues pvs) {
 			Boolean skip = this.skip;
 			if (skip != null) {

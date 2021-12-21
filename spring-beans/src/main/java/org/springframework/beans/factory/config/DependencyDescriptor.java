@@ -50,6 +50,7 @@ import org.springframework.util.ObjectUtils;
  * @since 2.5
  */
 @SuppressWarnings("serial")
+// 构造函数参数、方法参数或者属性的依赖注入描述符
 public class DependencyDescriptor extends InjectionPoint implements Serializable {
 
 	private final Class<?> declaringClass;

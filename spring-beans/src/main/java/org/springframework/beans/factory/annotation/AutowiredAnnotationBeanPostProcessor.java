@@ -394,8 +394,10 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		// 查询被注解修饰的属性或者方法
 		InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
 		try {
+			// 遍历进行注入操作，此处已经完成了注入操作，而不是将数据维护到pvs中
 			metadata.inject(bean, beanName, pvs);
 		}
 		catch (BeanCreationException ex) {
@@ -459,11 +461,13 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 		return metadata;
 	}
 
+	// 解析clazz，返回被autowiredAnnotationTypes集合中注解修饰的属性或方法，并封装返回
 	private InjectionMetadata buildAutowiringMetadata(final Class<?> clazz) {
 		if (!AnnotationUtils.isCandidateClass(clazz, this.autowiredAnnotationTypes)) {
 			return InjectionMetadata.EMPTY;
 		}
 
+		// 需要被注入的属性集合（被Autowired修饰的属性或方法）
 		List<InjectionMetadata.InjectedElement> elements = new ArrayList<>();
 		Class<?> targetClass = clazz;
 
@@ -471,19 +475,23 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
 
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
+				// 当前属性上是否有被目标注解修饰
 				MergedAnnotation<?> ann = findAutowiredAnnotation(field);
 				if (ann != null) {
+					// 不能修饰静态方法
 					if (Modifier.isStatic(field.getModifiers())) {
 						if (logger.isInfoEnabled()) {
 							logger.info("Autowired annotation is not supported on static fields: " + field);
 						}
 						return;
 					}
+					// 解析是否是必须注入的
 					boolean required = determineRequiredStatus(ann);
 					currElements.add(new AutowiredFieldElement(field, required));
 				}
 			});
 
+			// 方法解析（Autowired注解用在方法上， 会对参数进行自动注入）
 			ReflectionUtils.doWithLocalMethods(targetClass, method -> {
 				Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);
 				if (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) {
@@ -637,6 +645,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 				}
 			}
 			else {
+				// 解析属性值
 				value = resolveFieldValue(field, bean, beanName);
 			}
 			if (value != null) {
@@ -655,21 +664,26 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			TypeConverter typeConverter = beanFactory.getTypeConverter();
 			Object value;
 			try {
+				// 解析属性值
 				value = beanFactory.resolveDependency(desc, beanName, autowiredBeanNames, typeConverter);
 			}
 			catch (BeansException ex) {
 				throw new UnsatisfiedDependencyException(null, beanName, new InjectionPoint(field), ex);
 			}
+			// 同步设置缓存
 			synchronized (this) {
 				if (!this.cached) {
 					Object cachedFieldValue = null;
 					if (value != null || this.required) {
 						cachedFieldValue = desc;
+						// 依赖关系的缓存
 						registerDependentBeans(beanName, autowiredBeanNames);
 						if (autowiredBeanNames.size() == 1) {
 							String autowiredBeanName = autowiredBeanNames.iterator().next();
+							// beanFactory中包含被依赖的bean并且和filed类型匹配
 							if (beanFactory.containsBean(autowiredBeanName) &&
 									beanFactory.isTypeMatch(autowiredBeanName, field.getType())) {
+								// 封装并缓存
 								cachedFieldValue = new ShortcutDependencyDescriptor(
 										desc, autowiredBeanName, field.getType());
 							}
@@ -718,11 +732,13 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 				}
 			}
 			else {
+				// 解析参数值
 				arguments = resolveMethodArguments(method, bean, beanName);
 			}
 			if (arguments != null) {
 				try {
 					ReflectionUtils.makeAccessible(method);
+					// 方法注入调用
 					method.invoke(bean, arguments);
 				}
 				catch (InvocationTargetException ex) {
@@ -752,6 +768,8 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 			Set<String> autowiredBeans = new LinkedHashSet<>(argumentCount);
 			Assert.state(beanFactory != null, "No BeanFactory available");
 			TypeConverter typeConverter = beanFactory.getTypeConverter();
+
+			// 遍历解析每个参数值
 			for (int i = 0; i < arguments.length; i++) {
 				MethodParameter methodParam = new MethodParameter(method, i);
 				DependencyDescriptor currDesc = new DependencyDescriptor(methodParam, this.required);
@@ -773,6 +791,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 				if (!this.cached) {
 					if (arguments != null) {
 						DependencyDescriptor[] cachedMethodArguments = Arrays.copyOf(descriptors, arguments.length);
+						// 依赖关系维护
 						registerDependentBeans(beanName, autowiredBeans);
 						if (autowiredBeans.size() == argumentCount) {
 							Iterator<String> it = autowiredBeans.iterator();
@@ -786,6 +805,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 								}
 							}
 						}
+						// 缓存参数
 						this.cachedMethodArguments = cachedMethodArguments;
 					}
 					else {
