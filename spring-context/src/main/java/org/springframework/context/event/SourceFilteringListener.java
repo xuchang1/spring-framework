@@ -36,8 +36,10 @@ import org.springframework.lang.Nullable;
  */
 public class SourceFilteringListener implements GenericApplicationListener {
 
+	// 原始类
 	private final Object source;
 
+	// 代理的监听器
 	@Nullable
 	private GenericApplicationListener delegate;
 
@@ -106,6 +108,7 @@ public class SourceFilteringListener implements GenericApplicationListener {
 			throw new IllegalStateException(
 					"Must specify a delegate object or override the onApplicationEventInternal method");
 		}
+		// 转发给代理类，触发事件
 		this.delegate.onApplicationEvent(event);
 	}
 
