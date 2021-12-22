@@ -46,6 +46,7 @@ public class HandlerExecutionChain {
 
 	private final List<HandlerInterceptor> interceptorList = new ArrayList<>();
 
+	// 已执行的位置
 	private int interceptorIndex = -1;
 
 
@@ -142,13 +143,16 @@ public class HandlerExecutionChain {
 	 * next interceptor or the handler itself. Else, DispatcherServlet assumes
 	 * that this interceptor has already dealt with the response itself.
 	 */
+	// 应用拦截器的前置处理
 	boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		for (int i = 0; i < this.interceptorList.size(); i++) {
 			HandlerInterceptor interceptor = this.interceptorList.get(i);
 			if (!interceptor.preHandle(request, response, this.handler)) {
+				// 前置处理返回false，触发已完成处理
 				triggerAfterCompletion(request, response, null);
 				return false;
 			}
+			// 标记已执行的拦截器索引位置（返回false的前一个，触发已完成处理时，从该处开始往前执行）
 			this.interceptorIndex = i;
 		}
 		return true;
@@ -157,6 +161,7 @@ public class HandlerExecutionChain {
 	/**
 	 * Apply postHandle methods of registered interceptors.
 	 */
+	// 应用拦截器的后置处理
 	void applyPostHandle(HttpServletRequest request, HttpServletResponse response, @Nullable ModelAndView mv)
 			throws Exception {
 
@@ -186,6 +191,7 @@ public class HandlerExecutionChain {
 	/**
 	 * Apply afterConcurrentHandlerStarted callback on mapped AsyncHandlerInterceptors.
 	 */
+	// 异步回调
 	void applyAfterConcurrentHandlingStarted(HttpServletRequest request, HttpServletResponse response) {
 		for (int i = this.interceptorList.size() - 1; i >= 0; i--) {
 			HandlerInterceptor interceptor = this.interceptorList.get(i);

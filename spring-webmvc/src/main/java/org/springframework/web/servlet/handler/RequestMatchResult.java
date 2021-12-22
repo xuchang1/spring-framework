@@ -44,9 +44,15 @@ public class RequestMatchResult {
 	@Nullable
 	private final String pattern;
 
+	/**
+	 * 被匹配的路径
+	 */
 	@Nullable
 	private final String lookupPath;
 
+	/**
+	 * 路径匹配器
+	 */
 	@Nullable
 	private final PathMatcher pathMatcher;
 

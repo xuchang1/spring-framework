@@ -59,19 +59,31 @@ import org.springframework.web.util.pattern.PatternParseException;
  * @author Brian Clozel
  * @since 3.0
  */
+// url路径匹配拦截器
 public final class MappedInterceptor implements HandlerInterceptor {
 
 	private static PathMatcher defaultPathMatcher = new AntPathMatcher();
 
-
+	/**
+	 * 匹配的路径
+	 */
 	@Nullable
 	private final PatternAdapter[] includePatterns;
 
+	/**
+	 * 不匹配的路径
+	 */
 	@Nullable
 	private final PatternAdapter[] excludePatterns;
 
+	/**
+	 * 路径匹配器
+	 */
 	private PathMatcher pathMatcher = defaultPathMatcher;
 
+	/**
+	 * 拦截器对象
+	 */
 	private final HandlerInterceptor interceptor;
 
 
@@ -183,12 +195,15 @@ public final class MappedInterceptor implements HandlerInterceptor {
 	 * @param request the request to match to
 	 * @return {@code true} if the interceptor should be applied to the request
 	 */
+	// 为true执行拦截器逻辑
 	public boolean matches(HttpServletRequest request) {
+		// 获取路径
 		Object path = ServletRequestPathUtils.getCachedPath(request);
 		if (this.pathMatcher != defaultPathMatcher) {
 			path = path.toString();
 		}
 		boolean isPathContainer = (path instanceof PathContainer);
+		// 是否在不匹配的模式中
 		if (!ObjectUtils.isEmpty(this.excludePatterns)) {
 			for (PatternAdapter adapter : this.excludePatterns) {
 				if (adapter.match(path, isPathContainer, this.pathMatcher)) {
@@ -196,9 +211,13 @@ public final class MappedInterceptor implements HandlerInterceptor {
 				}
 			}
 		}
+
+		// 为空表示全部匹配，都需要执行拦截逻辑
 		if (ObjectUtils.isEmpty(this.includePatterns)) {
 			return true;
 		}
+
+		// 是否在匹配的路径模式中
 		for (PatternAdapter adapter : this.includePatterns) {
 			if (adapter.match(path, isPathContainer, this.pathMatcher)) {
 				return true;

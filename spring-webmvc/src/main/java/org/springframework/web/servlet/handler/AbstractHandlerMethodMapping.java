@@ -94,9 +94,15 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 
 	private boolean detectHandlerMethodsInAncestorContexts = false;
 
+	/**
+	 * Mapping 命名策略
+	 */
 	@Nullable
 	private HandlerMethodMappingNamingStrategy<T> namingStrategy;
 
+	/**
+	 * Mapping 注册表
+	 */
 	private final MappingRegistry mappingRegistry = new MappingRegistry();
 
 
@@ -528,9 +534,13 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 * Return the request mapping paths that are not patterns.
 	 * @since 5.3
 	 */
+	//例如，@RequestMapping("/user/login") 注解对应的路径，就是直接路径。
+	//例如，@RequestMapping("/user/${id}") 注解对应的路径，不是直接路径
 	protected Set<String> getDirectPaths(T mapping) {
 		Set<String> urls = Collections.emptySet();
+		// 遍历 Mapping 对应的路径
 		for (String path : getMappingPathPatterns(mapping)) {
+			// 非**模式**路径
 			if (!getPathMatcher().isPattern(path)) {
 				urls = (urls.isEmpty() ? new HashSet<>(1) : urls);
 				urls.add(path);
@@ -567,8 +577,14 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 
 		private final Map<T, MappingRegistration<T>> registry = new HashMap<>();
 
+		/**
+		 * 直接 URL 的映射(url -> mapping的映射)
+		 */
 		private final MultiValueMap<String, T> pathLookup = new LinkedMultiValueMap<>();
 
+		/**
+		 * Mapping 的名字与 HandlerMethod 的映射
+		 */
 		private final Map<String, List<HandlerMethod>> nameLookup = new ConcurrentHashMap<>();
 
 		private final Map<HandlerMethod, CorsConfiguration> corsLookup = new ConcurrentHashMap<>();
@@ -623,19 +639,27 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 		}
 
 		public void register(T mapping, Object handler, Method method) {
+			// <1> 获得写锁
 			this.readWriteLock.writeLock().lock();
 			try {
+				// <2.1> 创建 HandlerMethod 对象
 				HandlerMethod handlerMethod = createHandlerMethod(handler, method);
+				// <2.2> 校验当前 mapping 不存在，否则抛出 IllegalStateException 异常
 				validateMethodMapping(handlerMethod, mapping);
 
+				// <3.1> 获得 mapping 对应的普通 URL 数组
 				Set<String> directPaths = AbstractHandlerMethodMapping.this.getDirectPaths(mapping);
+				// <3.1> 获得 mapping 对应的普通 URL 数组
 				for (String path : directPaths) {
 					this.pathLookup.add(path, mapping);
 				}
 
+				// <4> 初始化 nameLookup
 				String name = null;
 				if (getNamingStrategy() != null) {
+					// <4.1> 获得 Mapping 的名字
 					name = getNamingStrategy().getName(handlerMethod, mapping);
+					// <4.2> 添加到 mapping 的名字 + HandlerMethod 到 nameLookup 中
 					addMappingName(name, handlerMethod);
 				}
 
@@ -645,10 +669,12 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 					this.corsLookup.put(handlerMethod, corsConfig);
 				}
 
+				// <5> 创建 MappingRegistration 对象，并 mapping + MappingRegistration 添加到 registry 中
 				this.registry.put(mapping,
 						new MappingRegistration<>(mapping, handlerMethod, directPaths, name, corsConfig != null));
 			}
 			finally {
+				// <6> 释放写锁
 				this.readWriteLock.writeLock().unlock();
 			}
 		}
@@ -656,6 +682,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 		private void validateMethodMapping(HandlerMethod handlerMethod, T mapping) {
 			MappingRegistration<T> registration = this.registry.get(mapping);
 			HandlerMethod existingHandlerMethod = (registration != null ? registration.getHandlerMethod() : null);
+			// 缓存中已存在但是与当前的不相等，抛出异常
 			if (existingHandlerMethod != null && !existingHandlerMethod.equals(handlerMethod)) {
 				throw new IllegalStateException(
 						"Ambiguous mapping. Cannot map '" + handlerMethod.getBean() + "' method \n" +

@@ -51,6 +51,7 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.web.servlet.support.RequestContext#getLocale
  * @see org.springframework.web.servlet.support.RequestContextUtils#getLocale
  */
+// 本地化( 国际化 )解析器接口
 public interface LocaleResolver {
 
 	/**

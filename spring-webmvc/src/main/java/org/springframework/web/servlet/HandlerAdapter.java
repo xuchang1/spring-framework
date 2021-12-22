@@ -47,6 +47,7 @@ import org.springframework.lang.Nullable;
  * @see org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter
  * @see org.springframework.web.servlet.handler.SimpleServletHandlerAdapter
  */
+// 处理器适配器接口
 public interface HandlerAdapter {
 
 	/**

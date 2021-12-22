@@ -29,6 +29,7 @@ import org.springframework.lang.Nullable;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 根据请求，获得其视图名
 public interface RequestToViewNameTranslator {
 
 	/**
