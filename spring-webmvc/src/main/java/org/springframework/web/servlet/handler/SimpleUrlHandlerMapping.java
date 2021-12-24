@@ -58,6 +58,9 @@ import org.springframework.util.CollectionUtils;
  */
 public class SimpleUrlHandlerMapping extends AbstractUrlHandlerMapping {
 
+	/**
+	 * 配置的 URL 与处理器的映射
+	 */
 	private final Map<String, Object> urlMap = new LinkedHashMap<>();
 
 
@@ -152,6 +155,7 @@ public class SimpleUrlHandlerMapping extends AbstractUrlHandlerMapping {
 		else {
 			urlMap.forEach((url, handler) -> {
 				// Prepend with slash if not already present.
+				// 添加前缀 /
 				if (!url.startsWith("/")) {
 					url = "/" + url;
 				}
@@ -159,6 +163,8 @@ public class SimpleUrlHandlerMapping extends AbstractUrlHandlerMapping {
 				if (handler instanceof String) {
 					handler = ((String) handler).trim();
 				}
+
+				// 父类注册方法
 				registerHandler(url, handler);
 			});
 			logMappings();
