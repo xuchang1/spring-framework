@@ -64,6 +64,7 @@ public final class MethodIntrospector {
 			specificHandlerType = ClassUtils.getUserClass(targetType);
 			handlerTypes.add(specificHandlerType);
 		}
+		// 返回当前类所有实现的接口类
 		handlerTypes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetType));
 
 		for (Class<?> currentHandlerType : handlerTypes) {
@@ -117,6 +118,7 @@ public final class MethodIntrospector {
 		try {
 			String methodName = method.getName();
 			Class<?>[] parameterTypes = method.getParameterTypes();
+			// 实现的接口上面查询
 			for (Class<?> ifc : targetType.getInterfaces()) {
 				try {
 					return ifc.getMethod(methodName, parameterTypes);

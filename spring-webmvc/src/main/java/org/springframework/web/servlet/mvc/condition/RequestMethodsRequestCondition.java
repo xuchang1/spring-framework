@@ -129,7 +129,9 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 			return matchPreFlight(request);
 		}
 
+		// 空的情况下，就返回自身
 		if (getMethods().isEmpty()) {
+			// OPTIONS请求且非错误情况下，返回null
 			if (RequestMethod.OPTIONS.name().equals(request.getMethod()) &&
 					!DispatcherType.ERROR.equals(request.getDispatcherType())) {
 
@@ -138,6 +140,7 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 			return this;
 		}
 
+		// 非空，逐个匹配
 		return matchRequestMethod(request.getMethod());
 	}
 
@@ -160,9 +163,12 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 		RequestMethod requestMethod;
 		try {
 			requestMethod = RequestMethod.valueOf(httpMethodValue);
+			// method匹配上，从缓存中获取对应的RequestMethodsRequestCondition对象
 			if (getMethods().contains(requestMethod)) {
 				return requestMethodConditionCache.get(httpMethodValue);
 			}
+
+			// 当前请求是head请求并且注解配置了get的method,则也验证通过
 			if (requestMethod.equals(RequestMethod.HEAD) && getMethods().contains(RequestMethod.GET)) {
 				return requestMethodConditionCache.get(HttpMethod.GET.name());
 			}
@@ -186,10 +192,12 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 */
 	@Override
 	public int compareTo(RequestMethodsRequestCondition other, HttpServletRequest request) {
+		// 包含的method数量
 		if (other.methods.size() != this.methods.size()) {
 			return other.methods.size() - this.methods.size();
 		}
 		else if (this.methods.size() == 1) {
+			// 只包含一个method，一个是get，一个是head，则get的优先级较高
 			if (this.methods.contains(RequestMethod.HEAD) && other.methods.contains(RequestMethod.GET)) {
 				return -1;
 			}
@@ -197,6 +205,7 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 				return 1;
 			}
 		}
+		// 其他情况下优先级相同
 		return 0;
 	}
 

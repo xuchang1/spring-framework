@@ -80,6 +80,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 
 
 	protected RequestMappingInfoHandlerMapping() {
+		// NamingStrategy
 		setHandlerMethodMappingNamingStrategy(new RequestMappingInfoHandlerMethodMappingNamingStrategy());
 	}
 
@@ -139,7 +140,9 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	protected void handleMatch(RequestMappingInfo info, String lookupPath, HttpServletRequest request) {
 		super.handleMatch(info, lookupPath, request);
 
+		// pathPatternsCondition or patternsCondition
 		RequestCondition<?> condition = info.getActivePatternsCondition();
+		// 匹配最佳的路径和路径上的变量集合，并设置属性到request中
 		if (condition instanceof PathPatternsRequestCondition) {
 			extractMatchDetails((PathPatternsRequestCondition) condition, lookupPath, request);
 		}
@@ -147,6 +150,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 			extractMatchDetails((PatternsRequestCondition) condition, lookupPath, request);
 		}
 
+		// 不为空，设置到属性汇总
 		if (!info.getProducesCondition().getProducibleMediaTypes().isEmpty()) {
 			Set<MediaType> mediaTypes = info.getProducesCondition().getProducibleMediaTypes();
 			request.setAttribute(PRODUCIBLE_MEDIA_TYPES_ATTRIBUTE, mediaTypes);
@@ -156,7 +160,9 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	private void extractMatchDetails(
 			PathPatternsRequestCondition condition, String lookupPath, HttpServletRequest request) {
 
+		// 最佳路径
 		PathPattern bestPattern;
+		// 路径上的变量集合
 		Map<String, String> uriVariables;
 		if (condition.isEmptyPathMapping()) {
 			bestPattern = condition.getFirstPattern();
@@ -234,6 +240,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	 * @throws HttpMediaTypeNotAcceptableException if there are matches by URL
 	 * but not by consumable/producible media types
 	 */
+	// 返回未匹配的原因
 	@Override
 	protected HandlerMethod handleNoMatch(
 			Set<RequestMappingInfo> infos, String lookupPath, HttpServletRequest request) throws ServletException {
@@ -243,6 +250,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 			return null;
 		}
 
+		// method未匹配到
 		if (helper.hasMethodsMismatch()) {
 			Set<String> methods = helper.getAllowedMethods();
 			if (HttpMethod.OPTIONS.matches(request.getMethod())) {
@@ -253,6 +261,7 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 			throw new HttpRequestMethodNotSupportedException(request.getMethod(), methods);
 		}
 
+		// 可消费的 Content-Type 错误
 		if (helper.hasConsumesMismatch()) {
 			Set<MediaType> mediaTypes = helper.getConsumableMediaTypes();
 			MediaType contentType = null;
@@ -267,11 +276,13 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 			throw new HttpMediaTypeNotSupportedException(contentType, new ArrayList<>(mediaTypes));
 		}
 
+		// 可生产的 Content-Type 错误
 		if (helper.hasProducesMismatch()) {
 			Set<MediaType> mediaTypes = helper.getProducibleMediaTypes();
 			throw new HttpMediaTypeNotAcceptableException(new ArrayList<>(mediaTypes));
 		}
 
+		// 参数错误
 		if (helper.hasParamsMismatch()) {
 			List<String[]> conditions = helper.getParamConditions();
 			throw new UnsatisfiedServletRequestParameterException(conditions, request.getParameterMap());

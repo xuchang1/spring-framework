@@ -60,6 +60,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * @author Sam Brannen
  * @since 3.1
  */
+// handler + method的组合，会缓存对应的bean对象和要调用的方法，匹配上后可直接通过该类调用方法
 public class HandlerMethod {
 
 	/** Logger that is available to subclasses. */
@@ -193,6 +194,9 @@ public class HandlerMethod {
 		return result;
 	}
 
+	/**
+	 * 查看方法或者类上面，有没有ResponseStatus注解，存在则解析并缓存其内容
+	 */
 	private void evaluateResponseStatus() {
 		ResponseStatus annotation = getMethodAnnotation(ResponseStatus.class);
 		if (annotation == null) {

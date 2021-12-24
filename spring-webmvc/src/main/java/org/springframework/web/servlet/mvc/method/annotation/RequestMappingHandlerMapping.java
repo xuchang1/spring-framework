@@ -187,7 +187,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	@Override
 	@SuppressWarnings("deprecation")
 	public void afterPropertiesSet() {
-
+		// 构建 RequestMappingInfo.BuilderConfiguration 对象
 		this.config = new RequestMappingInfo.BuilderConfiguration();
 		this.config.setTrailingSlashMatch(useTrailingSlashMatch());
 		this.config.setContentNegotiationManager(getContentNegotiationManager());
@@ -203,6 +203,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 			this.config.setPathMatcher(getPathMatcher());
 		}
 
+		// 调用父类，初始化
 		super.afterPropertiesSet();
 	}
 
@@ -269,12 +270,16 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	@Override
 	@Nullable
 	protected RequestMappingInfo getMappingForMethod(Method method, Class<?> handlerType) {
+		// 基于method创建RequestMappingInfo
 		RequestMappingInfo info = createRequestMappingInfo(method);
 		if (info != null) {
+			// 基于当前类创建RequestMappingInfo，并进行属性合并
 			RequestMappingInfo typeInfo = createRequestMappingInfo(handlerType);
 			if (typeInfo != null) {
 				info = typeInfo.combine(info);
 			}
+
+			// 如果有前缀，则设置到info中
 			String prefix = getPathPrefix(handlerType);
 			if (prefix != null) {
 				info = RequestMappingInfo.paths(prefix).options(this.config).build().combine(info);
@@ -306,9 +311,12 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	 */
 	@Nullable
 	private RequestMappingInfo createRequestMappingInfo(AnnotatedElement element) {
+		// 基于方法上的 @RequestMapping 注解，创建 RequestMappingInfo 对象
 		RequestMapping requestMapping = AnnotatedElementUtils.findMergedAnnotation(element, RequestMapping.class);
+		// 定制的RequestCondition，目前未做任何处理
 		RequestCondition<?> condition = (element instanceof Class ?
 				getCustomTypeCondition((Class<?>) element) : getCustomMethodCondition((Method) element));
+		// 创建RequestMappingInfo
 		return (requestMapping != null ? createRequestMappingInfo(requestMapping, condition) : null);
 	}
 
@@ -353,6 +361,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	protected RequestMappingInfo createRequestMappingInfo(
 			RequestMapping requestMapping, @Nullable RequestCondition<?> customCondition) {
 
+		// 创建 RequestMappingInfo.Builder 对象，设置对应属性（缓存了注解的各种各种属性值）
 		RequestMappingInfo.Builder builder = RequestMappingInfo
 				.paths(resolveEmbeddedValuesInPatterns(requestMapping.path()))
 				.methods(requestMapping.method())
@@ -364,6 +373,8 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 		if (customCondition != null) {
 			builder.customCondition(customCondition);
 		}
+
+		// 创建 RequestMappingInfo 对象
 		return builder.options(this.config).build();
 	}
 
@@ -371,6 +382,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	 * Resolve placeholder values in the given array of patterns.
 	 * @return a new array with updated patterns
 	 */
+	// 占位符解析
 	protected String[] resolveEmbeddedValuesInPatterns(String[] patterns) {
 		if (this.embeddedValueResolver == null) {
 			return patterns;
@@ -412,8 +424,12 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	@Override
 	public RequestMatchResult match(HttpServletRequest request, String pattern) {
 		Assert.isNull(getPatternParser(), "This HandlerMapping requires a PathPattern");
+		// 创建 RequestMappingInfo 对象
 		RequestMappingInfo info = RequestMappingInfo.paths(pattern).options(this.config).build();
+		// 获得匹配的 RequestMappingInfo 对象
 		RequestMappingInfo match = info.getMatchingCondition(request);
+
+		// 创建 RequestMatchResult 结果
 		return (match != null && match.getPatternsCondition() != null ?
 				new RequestMatchResult(
 						match.getPatternsCondition().getPatterns().iterator().next(),

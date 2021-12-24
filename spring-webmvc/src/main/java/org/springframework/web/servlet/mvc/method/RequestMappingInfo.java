@@ -81,26 +81,49 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 
 	private static final RequestConditionHolder EMPTY_CUSTOM = new RequestConditionHolder(null);
 
-
+	/**
+	 * 名字
+	 */
 	@Nullable
 	private final String name;
 
+	/**
+	 * 请求路径的条件
+	 */
 	@Nullable
 	private final PathPatternsRequestCondition pathPatternsCondition;
 
 	@Nullable
 	private final PatternsRequestCondition patternsCondition;
 
+	/**
+	 * 请求方法的条件
+	 */
 	private final RequestMethodsRequestCondition methodsCondition;
 
+	/**
+	 * 参数的条件
+	 */
 	private final ParamsRequestCondition paramsCondition;
 
+	/**
+	 * 请求头的条件
+	 */
 	private final HeadersRequestCondition headersCondition;
 
+	/**
+	 * 可消费的 Content-Type 的条件
+	 */
 	private final ConsumesRequestCondition consumesCondition;
 
+	/**
+	 * 可生产的 Content-Type 的条件
+	 */
 	private final ProducesRequestCondition producesCondition;
 
+	/**
+	 * 自定义的条件
+	 */
 	private final RequestConditionHolder customConditionHolder;
 
 	private final int hashCode;
@@ -251,6 +274,7 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 	 * @since 5.3
 	 */
 	public Set<String> getPatternValues() {
+		// PathPatternsRequestCondition、PatternsRequestCondition两种策略的处理
 		RequestCondition<?> condition = getActivePatternsCondition();
 		return (condition instanceof PathPatternsRequestCondition ?
 				((PathPatternsRequestCondition) condition).getPatternValues() :
@@ -371,6 +395,7 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 	 * patterns on top.
 	 * @return a new instance in case of a match; or {@code null} otherwise
 	 */
+	// 使用内部缓存的各种Condition进行match，有返回null的直接返回
 	@Override
 	@Nullable
 	public RequestMappingInfo getMatchingCondition(HttpServletRequest request) {
@@ -412,6 +437,8 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 		if (custom == null) {
 			return null;
 		}
+
+		// 对match的结果进行封装
 		return new RequestMappingInfo(this.name, pathPatterns, patterns,
 				methods, params, headers, consumes, produces, custom, this.options);
 	}
