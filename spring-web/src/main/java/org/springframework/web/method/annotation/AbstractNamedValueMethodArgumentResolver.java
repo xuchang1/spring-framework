@@ -62,6 +62,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// 基于名字获取值,@RequestParam(value = "username")这种的获取username的值
 public abstract class AbstractNamedValueMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
 	@Nullable
@@ -70,6 +71,9 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 	@Nullable
 	private final BeanExpressionContext expressionContext;
 
+	/**
+	 * MethodParameter 和 NamedValueInfo 的映射，作为缓存。
+	 */
 	private final Map<MethodParameter, NamedValueInfo> namedValueInfoCache = new ConcurrentHashMap<>(256);
 
 
@@ -95,30 +99,39 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 	@Nullable
 	public final Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
 			NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
-
+		// <1> 获得方法参数对应的 NamedValueInfo 对象。
 		NamedValueInfo namedValueInfo = getNamedValueInfo(parameter);
+		// <2> 如果 parameter 是内嵌类型的（Optional类型），则获取内嵌的参数。否则，还是使用 parameter 自身
 		MethodParameter nestedParameter = parameter.nestedIfOptional();
 
+		// <3> 如果 name 是占位符，则进行解析成对应的值
 		Object resolvedName = resolveEmbeddedValuesAndExpressions(namedValueInfo.name);
 		if (resolvedName == null) {
 			throw new IllegalArgumentException(
 					"Specified name must not resolve to null: [" + namedValueInfo.name + "]");
 		}
 
+		// <4> 解析 name 对应的值（子类实现）
 		Object arg = resolveName(resolvedName.toString(), nestedParameter, webRequest);
+		// <5> 如果 arg 不存在，则使用默认值
 		if (arg == null) {
+			// <5.1> 使用默认值
 			if (namedValueInfo.defaultValue != null) {
 				arg = resolveEmbeddedValuesAndExpressions(namedValueInfo.defaultValue);
 			}
 			else if (namedValueInfo.required && !nestedParameter.isOptional()) {
+				// <5.2> 如果是必填，则处理参数缺失的情况
 				handleMissingValue(namedValueInfo.name, nestedParameter, webRequest);
 			}
+			// <5.3> 处理null值的情况
 			arg = handleNullValue(namedValueInfo.name, arg, nestedParameter.getNestedParameterType());
 		}
+		// <6> 如果 arg 为空串，则使用默认值
 		else if ("".equals(arg) && namedValueInfo.defaultValue != null) {
 			arg = resolveEmbeddedValuesAndExpressions(namedValueInfo.defaultValue);
 		}
 
+		// <7> 执行值的类型转换
 		if (binderFactory != null) {
 			WebDataBinder binder = binderFactory.createBinder(webRequest, null, namedValueInfo.name);
 			try {
@@ -138,7 +151,7 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 				handleMissingValueAfterConversion(namedValueInfo.name, nestedParameter, webRequest);
 			}
 		}
-
+		// 处理解析的值（子类实现）
 		handleResolvedValue(arg, namedValueInfo.name, parameter, mavContainer, webRequest);
 
 		return arg;
@@ -150,7 +163,9 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 	private NamedValueInfo getNamedValueInfo(MethodParameter parameter) {
 		NamedValueInfo namedValueInfo = this.namedValueInfoCache.get(parameter);
 		if (namedValueInfo == null) {
+			// 创建namedValueInfo对象，子类实现
 			namedValueInfo = createNamedValueInfo(parameter);
+			// 更新其值
 			namedValueInfo = updateNamedValueInfo(parameter, namedValueInfo);
 			this.namedValueInfoCache.put(parameter, namedValueInfo);
 		}
@@ -178,6 +193,7 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 						"] not specified, and parameter name information not found in class file either.");
 			}
 		}
+		// 获取默认值，传了空值设置为null
 		String defaultValue = (ValueConstants.DEFAULT_NONE.equals(info.defaultValue) ? null : info.defaultValue);
 		return new NamedValueInfo(name, info.required, defaultValue);
 	}
@@ -191,11 +207,13 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 		if (this.configurableBeanFactory == null || this.expressionContext == null) {
 			return value;
 		}
+		// 内部的StringValueResolver进行值解析
 		String placeholdersResolved = this.configurableBeanFactory.resolveEmbeddedValue(value);
 		BeanExpressionResolver exprResolver = this.configurableBeanFactory.getBeanExpressionResolver();
 		if (exprResolver == null) {
 			return value;
 		}
+		// 使用spel表达式进行解析
 		return exprResolver.evaluate(placeholdersResolved, this.expressionContext);
 	}
 
@@ -256,9 +274,11 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 	@Nullable
 	private Object handleNullValue(String name, @Nullable Object value, Class<?> paramType) {
 		if (value == null) {
+			// Boolean类型返回false
 			if (Boolean.TYPE.equals(paramType)) {
 				return Boolean.FALSE;
 			}
+			// 基本类型无法进行null值转化，抛出异常
 			else if (paramType.isPrimitive()) {
 				throw new IllegalStateException("Optional " + paramType.getSimpleName() + " parameter '" + name +
 						"' is present but cannot be translated into a null value due to being declared as a " +

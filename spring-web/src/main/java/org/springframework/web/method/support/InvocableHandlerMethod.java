@@ -134,10 +134,12 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	public Object invokeForRequest(NativeWebRequest request, @Nullable ModelAndViewContainer mavContainer,
 			Object... providedArgs) throws Exception {
 
+		// <1> 解析参数
 		Object[] args = getMethodArgumentValues(request, mavContainer, providedArgs);
 		if (logger.isTraceEnabled()) {
 			logger.trace("Arguments: " + Arrays.toString(args));
 		}
+		// <2> 执行调用
 		return doInvoke(args);
 	}
 
@@ -150,27 +152,37 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	protected Object[] getMethodArgumentValues(NativeWebRequest request, @Nullable ModelAndViewContainer mavContainer,
 			Object... providedArgs) throws Exception {
 
+		// 方法的参数信息的数组
 		MethodParameter[] parameters = getMethodParameters();
 		if (ObjectUtils.isEmpty(parameters)) {
 			return EMPTY_ARGS;
 		}
 
+		// 解析后的参数结果数组
 		Object[] args = new Object[parameters.length];
+
+		// 遍历，开始解析
 		for (int i = 0; i < parameters.length; i++) {
 			MethodParameter parameter = parameters[i];
 			parameter.initParameterNameDiscovery(this.parameterNameDiscoverer);
+
+			// <1> 先从 providedArgs 中获得参数。如果未获得到，则进入下一个参数的解析
 			args[i] = findProvidedArgument(parameter, providedArgs);
 			if (args[i] != null) {
 				continue;
 			}
+
+			// <2> 判断 argumentResolvers 是否支持当前的参数解析
 			if (!this.resolvers.supportsParameter(parameter)) {
 				throw new IllegalStateException(formatArgumentError(parameter, "No suitable resolver"));
 			}
 			try {
+				// 执行解析
 				args[i] = this.resolvers.resolveArgument(parameter, mavContainer, request, this.dataBinderFactory);
 			}
 			catch (Exception ex) {
 				// Leave stack trace for later, exception may actually be resolved and handled...
+				// 解析失败，打印日志，并抛出异常
 				if (logger.isDebugEnabled()) {
 					String exMsg = ex.getMessage();
 					if (exMsg != null && !exMsg.contains(parameter.getExecutable().toGenericString())) {
@@ -194,6 +206,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			if (KotlinDetector.isSuspendingFunction(method)) {
 				return CoroutinesUtils.invokeSuspendingFunction(method, getBean(), args);
 			}
+			// 执行调用
 			return method.invoke(getBean(), args);
 		}
 		catch (IllegalArgumentException ex) {

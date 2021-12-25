@@ -74,6 +74,7 @@ public class RequestParamMapMethodArgumentResolver implements HandlerMethodArgum
 
 		ResolvableType resolvableType = ResolvableType.forMethodParameter(parameter);
 
+		// MultiValueMap 类型的处理
 		if (MultiValueMap.class.isAssignableFrom(parameter.getParameterType())) {
 			// MultiValueMap
 			Class<?> valueType = resolvableType.as(MultiValueMap.class).getGeneric(1).resolve();
@@ -107,6 +108,7 @@ public class RequestParamMapMethodArgumentResolver implements HandlerMethodArgum
 
 		else {
 			// Regular Map
+			// 普通 Map 类型的处理
 			Class<?> valueType = resolvableType.asMap().getGeneric(1).resolve();
 			if (valueType == MultipartFile.class) {
 				MultipartRequest multipartRequest = MultipartResolutionDelegate.resolveMultipartRequest(webRequest);
@@ -127,6 +129,7 @@ public class RequestParamMapMethodArgumentResolver implements HandlerMethodArgum
 				return new LinkedHashMap<>(0);
 			}
 			else {
+				// 普通类型传参处理
 				Map<String, String[]> parameterMap = webRequest.getParameterMap();
 				Map<String, String> result = CollectionUtils.newLinkedHashMap(parameterMap.size());
 				parameterMap.forEach((key, values) -> {

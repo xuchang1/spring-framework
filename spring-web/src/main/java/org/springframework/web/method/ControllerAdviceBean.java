@@ -128,6 +128,7 @@ public class ControllerAdviceBean implements Ordered {
 		this.beanOrName = beanName;
 		this.isSingleton = beanFactory.isSingleton(beanName);
 		this.beanType = getBeanType(beanName, beanFactory);
+		// 解析了@ControllerAdvice注解的内容并缓存
 		this.beanTypePredicate = (controllerAdvice != null ? createBeanTypePredicate(controllerAdvice) :
 				createBeanTypePredicate(this.beanType));
 		this.beanFactory = beanFactory;

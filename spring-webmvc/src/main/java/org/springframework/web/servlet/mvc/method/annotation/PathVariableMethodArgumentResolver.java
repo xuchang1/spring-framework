@@ -91,8 +91,10 @@ public class PathVariableMethodArgumentResolver extends AbstractNamedValueMethod
 	@SuppressWarnings("unchecked")
 	@Nullable
 	protected Object resolveName(String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
+		// 获得路径参数
 		Map<String, String> uriTemplateVars = (Map<String, String>) request.getAttribute(
 				HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+		// 获得参数值
 		return (uriTemplateVars != null ? uriTemplateVars.get(name) : null);
 	}
 
@@ -116,10 +118,12 @@ public class PathVariableMethodArgumentResolver extends AbstractNamedValueMethod
 		String key = View.PATH_VARIABLES;
 		int scope = RequestAttributes.SCOPE_REQUEST;
 		Map<String, Object> pathVars = (Map<String, Object>) request.getAttribute(key, scope);
+		// 如果不存在 pathVars ，则进行创建
 		if (pathVars == null) {
 			pathVars = new HashMap<>();
 			request.setAttribute(key, pathVars, scope);
 		}
+		// 添加 name + arg 到 pathVars 中
 		pathVars.put(name, arg);
 	}
 
