@@ -16,19 +16,6 @@
 
 package org.springframework.web.servlet.mvc.method;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.InvalidMediaTypeException;
@@ -47,14 +34,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
-import org.springframework.web.servlet.mvc.condition.NameValueExpression;
-import org.springframework.web.servlet.mvc.condition.PathPatternsRequestCondition;
-import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
-import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
-import org.springframework.web.servlet.mvc.condition.RequestCondition;
+import org.springframework.web.servlet.mvc.condition.*;
 import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.WebUtils;
 import org.springframework.web.util.pattern.PathPattern;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Abstract base class for classes for which {@link RequestMappingInfo} defines
@@ -171,9 +159,11 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 		else {
 			PathContainer path = ServletRequestPathUtils.getParsedRequestPath(request).pathWithinApplication();
 			bestPattern = condition.getFirstPattern();
+			// 根据最优的模式解析路径，获取对应的参数
 			PathPattern.PathMatchInfo result = bestPattern.matchAndExtract(path);
 			Assert.notNull(result, () ->
 					"Expected bestPattern: " + bestPattern + " to match lookupPath " + path);
+			// 参数以map的形式缓存到request中
 			uriVariables = result.getUriVariables();
 			request.setAttribute(MATRIX_VARIABLES_ATTRIBUTE, result.getMatrixVariables());
 		}

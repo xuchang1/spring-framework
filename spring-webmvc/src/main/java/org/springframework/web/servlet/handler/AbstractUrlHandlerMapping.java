@@ -16,16 +16,6 @@
 
 package org.springframework.web.servlet.handler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.server.PathContainer;
@@ -42,6 +32,10 @@ import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.UrlPathHelper;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 /**
  * Abstract base class for URL-mapped {@link HandlerMapping} implementations.
@@ -84,6 +78,9 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 	 */
 	private final Map<String, Object> handlerMap = new LinkedHashMap<>();
 
+	/**
+	 * 路径模式->handler的映射
+	 */
 	private final Map<PathPattern, Object> pathPatternHandlerMap = new LinkedHashMap<>();
 
 
@@ -166,6 +163,8 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 		else {
 			handler = lookupHandler(lookupPath, request);
 		}
+
+		// 未找到，则进行根路径及默认路径逻辑判断
 		if (handler == null) {
 			// We need to care for the default handler directly, since we need to
 			// expose the PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE for it as well.
@@ -205,7 +204,7 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 	protected Object lookupHandler(
 			RequestPath path, String lookupPath, HttpServletRequest request) throws Exception {
 
-		// 直接从缓存中获取并构建HandlerExecutionChain
+		// 直接从缓存中获取并构建 HandlerExecutionChain
 		Object handler = getDirectMatch(lookupPath, request);
 		if (handler != null) {
 			return handler;
@@ -308,7 +307,7 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 
 			// There might be multiple 'best patterns', let's make sure we have the correct URI template variables
 			// for all of them
-			// 相同优先级的缓存并打印
+			// 获得路径参数集合
 			Map<String, String> uriTemplateVariables = new LinkedHashMap<>();
 			for (String matchingPattern : matchingPatterns) {
 				if (patternComparator.compare(bestMatch, matchingPattern) == 0) {
@@ -445,6 +444,7 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 	 * @throws BeansException if the handler couldn't be registered
 	 * @throws IllegalStateException if there is a conflicting handler registered
 	 */
+	// 处理器 Handler 注册，维护路径->处理器的映射关系
 	protected void registerHandler(String urlPath, Object handler) throws BeansException, IllegalStateException {
 		Assert.notNull(urlPath, "URL path must not be null");
 		Assert.notNull(handler, "Handler object must not be null");
@@ -488,6 +488,7 @@ public abstract class AbstractUrlHandlerMapping extends AbstractHandlerMapping i
 				// 映射关系缓存
 				this.handlerMap.put(urlPath, resolvedHandler);
 				if (getPatternParser() != null) {
+					// PatternParser 解析 路径，生成 PathPattern 对象
 					this.pathPatternHandlerMap.put(getPatternParser().parse(urlPath), resolvedHandler);
 				}
 				if (logger.isTraceEnabled()) {
