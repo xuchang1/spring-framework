@@ -16,11 +16,6 @@
 
 package org.springframework.web.method.annotation;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.ServletException;
-
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.beans.factory.config.BeanExpressionContext;
@@ -36,6 +31,10 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.RequestScope;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+
+import javax.servlet.ServletException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Abstract base class for resolving method arguments from a named value.
@@ -63,6 +62,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
  * @since 3.1
  */
 // 基于名字获取值,@RequestParam(value = "username")这种的获取username的值
+// name、value这种名称获取值的形式
 public abstract class AbstractNamedValueMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
 	@Nullable
@@ -186,6 +186,7 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 	private NamedValueInfo updateNamedValueInfo(MethodParameter parameter, NamedValueInfo info) {
 		String name = info.name;
 		if (info.name.isEmpty()) {
+			// 如果 name 为空，则使用参数名
 			name = parameter.getParameterName();
 			if (name == null) {
 				throw new IllegalArgumentException(
@@ -207,7 +208,7 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 		if (this.configurableBeanFactory == null || this.expressionContext == null) {
 			return value;
 		}
-		// 内部的StringValueResolver进行值解析
+		// 内部的StringValueResolver进行值解析（占位符解析）
 		String placeholdersResolved = this.configurableBeanFactory.resolveEmbeddedValue(value);
 		BeanExpressionResolver exprResolver = this.configurableBeanFactory.getBeanExpressionResolver();
 		if (exprResolver == null) {
@@ -278,7 +279,7 @@ public abstract class AbstractNamedValueMethodArgumentResolver implements Handle
 			if (Boolean.TYPE.equals(paramType)) {
 				return Boolean.FALSE;
 			}
-			// 基本类型无法进行null值转化，抛出异常
+			// 基本类型无法设置为null值，抛出异常
 			else if (paramType.isPrimitive()) {
 				throw new IllegalStateException("Optional " + paramType.getSimpleName() + " parameter '" + name +
 						"' is present but cannot be translated into a null value due to being declared as a " +

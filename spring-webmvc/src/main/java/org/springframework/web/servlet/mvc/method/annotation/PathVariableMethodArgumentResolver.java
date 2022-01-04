@@ -16,10 +16,6 @@
 
 package org.springframework.web.servlet.mvc.method.annotation;
 
-import java.beans.PropertyEditor;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
@@ -40,6 +36,10 @@ import org.springframework.web.method.support.UriComponentsContributor;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.View;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.beans.PropertyEditor;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Resolves method arguments annotated with an @{@link PathVariable}.
@@ -62,6 +62,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// url路径解析
 public class PathVariableMethodArgumentResolver extends AbstractNamedValueMethodArgumentResolver
 		implements UriComponentsContributor {
 
@@ -70,9 +71,12 @@ public class PathVariableMethodArgumentResolver extends AbstractNamedValueMethod
 
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
+		// 必须包含 @PathVariable 注解
 		if (!parameter.hasParameterAnnotation(PathVariable.class)) {
 			return false;
 		}
+
+		// 参数为map类型，必须指定 @PathVariable 注解的value值
 		if (Map.class.isAssignableFrom(parameter.nestedIfOptional().getNestedParameterType())) {
 			PathVariable pathVariable = parameter.getParameterAnnotation(PathVariable.class);
 			return (pathVariable != null && StringUtils.hasText(pathVariable.value()));
