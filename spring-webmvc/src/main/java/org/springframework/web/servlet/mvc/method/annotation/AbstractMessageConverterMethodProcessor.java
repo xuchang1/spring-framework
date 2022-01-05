@@ -179,7 +179,9 @@ public abstract class AbstractMessageConverterMethodProcessor extends AbstractMe
 		}
 		else {
 			body = value;
+			// 返回值的类型
 			valueType = getReturnValueType(body, returnType);
+			// 目标类型（啥时候回不一样？）
 			targetType = GenericTypeResolver.resolveType(getGenericType(returnType), returnType.getContainingClass());
 		}
 
@@ -289,6 +291,8 @@ public abstract class AbstractMessageConverterMethodProcessor extends AbstractMe
 				// <4.3> 判断 HttpMessageConverter 是否支持转换目标类型
 				GenericHttpMessageConverter genericConverter = (converter instanceof GenericHttpMessageConverter ?
 						(GenericHttpMessageConverter<?>) converter : null);
+
+				// 判断能否进行写入转化
 				if (genericConverter != null ?
 						((GenericHttpMessageConverter) converter).canWrite(targetType, valueType, selectedMediaType) :
 						converter.canWrite(valueType, selectedMediaType)) {
@@ -344,6 +348,7 @@ public abstract class AbstractMessageConverterMethodProcessor extends AbstractMe
 	 * (e.g. {@code ResponseEntity<T>}).
 	 */
 	protected Class<?> getReturnValueType(@Nullable Object value, MethodParameter returnType) {
+		// 该处 returnType.getParameterType() 因为存储的索引值为-1，在方法内部可以获取到method的返回值类型
 		return (value != null ? value.getClass() : returnType.getParameterType());
 	}
 

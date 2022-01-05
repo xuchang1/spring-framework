@@ -286,6 +286,7 @@ public class HandlerMethod {
 	 * Return the actual return value type.
 	 */
 	public MethodParameter getReturnValueType(@Nullable Object returnValue) {
+		// 参数索引传-1，表示获取方法返回值
 		return new ReturnValueMethodParameter(returnValue);
 	}
 

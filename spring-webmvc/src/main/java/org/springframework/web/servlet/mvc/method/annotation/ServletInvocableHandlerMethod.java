@@ -127,6 +127,7 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 		try {
 			// 处理器返回值
 			this.returnValueHandlers.handleReturnValue(
+					// 此处的 getReturnValueType 方法，是通过 HandlerMethod 对象调用的，返回了 MethodParameter中封装了返回值及原桥接方法
 					returnValue, getReturnValueType(returnValue), mavContainer, webRequest);
 		}
 		catch (Exception ex) {

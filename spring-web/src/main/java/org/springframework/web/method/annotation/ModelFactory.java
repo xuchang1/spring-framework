@@ -200,9 +200,11 @@ public final class ModelFactory {
 	public void updateModel(NativeWebRequest request, ModelAndViewContainer container) throws Exception {
 		ModelMap defaultModel = container.getDefaultModel();
 		if (container.getSessionStatus().isComplete()){
+			// 已完成清除
 			this.sessionAttributesHandler.cleanupAttributes(request);
 		}
 		else {
+			// 未完成添加
 			this.sessionAttributesHandler.storeAttributes(request, defaultModel);
 		}
 		if (!container.isRequestHandled() && container.getModel() == defaultModel) {

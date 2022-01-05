@@ -47,6 +47,7 @@ import org.springframework.web.bind.support.SimpleSessionStatus;
  * @author Juergen Hoeller
  * @since 3.1
  */
+// 远古时期的springmvc，接口返回ModelAndView对象，分别封装了要渲染的view名称及map结构存储的model数据
 public class ModelAndViewContainer {
 
 	/**

@@ -54,7 +54,9 @@ public class MethodParameter {
 
 	private static final Annotation[] EMPTY_ANNOTATION_ARRAY = new Annotation[0];
 
-
+	/**
+	 * 方法或构造函数本身
+	 */
 	private final Executable executable;
 
 	private final int parameterIndex;

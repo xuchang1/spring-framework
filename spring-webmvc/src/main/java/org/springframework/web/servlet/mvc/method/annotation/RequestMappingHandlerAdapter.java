@@ -162,6 +162,9 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 
 	private List<HttpMessageConverter<?>> messageConverters;
 
+	/**
+	 * 实现或集成特定类的 被@ControllerAdvice注解修饰的bean
+	 */
 	private final List<Object> requestResponseBodyAdvice = new ArrayList<>();
 
 	@Nullable
@@ -610,19 +613,19 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 			if (beanType == null) {
 				throw new IllegalStateException("Unresolvable type for ControllerAdviceBean: " + adviceBean);
 			}
-			// 有 @ModelAttribute ，无 @RequestMapping 注解的Method集合
+			// 1、有 @ModelAttribute ，无 @RequestMapping 注解的Method集合
 			Set<Method> attrMethods = MethodIntrospector.selectMethods(beanType, MODEL_ATTRIBUTE_METHODS);
 			if (!attrMethods.isEmpty()) {
 				this.modelAttributeAdviceCache.put(adviceBean, attrMethods);
 			}
 
-			// 包含@InitBinder 注解的方法
+			// 2、包含@InitBinder 注解的方法
 			Set<Method> binderMethods = MethodIntrospector.selectMethods(beanType, INIT_BINDER_METHODS);
 			if (!binderMethods.isEmpty()) {
 				this.initBinderAdviceCache.put(adviceBean, binderMethods);
 			}
 
-			// 是否是 RequestBodyAdvice 或 ResponseBodyAdvice 的子类
+			// 3、是否是 RequestBodyAdvice 或 ResponseBodyAdvice 的子类，添加到缓存中
 			if (RequestBodyAdvice.class.isAssignableFrom(beanType) || ResponseBodyAdvice.class.isAssignableFrom(beanType)) {
 				requestResponseBodyAdviceBeans.add(adviceBean);
 			}
@@ -664,7 +667,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 		List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>(30);
 
 		// Annotation-based argument resolution
-		// RequestParamMethodArgumentResolver传参false有限给其他类解析，如果解析失败传true再进行解析
+		// RequestParamMethodArgumentResolver传参false优先给其他类解析，如果解析失败传true再进行解析
 		resolvers.add(new RequestParamMethodArgumentResolver(getBeanFactory(), false));
 		resolvers.add(new RequestParamMapMethodArgumentResolver());
 		resolvers.add(new PathVariableMethodArgumentResolver());
@@ -881,7 +884,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 			// <3> 创建 ModelFactory 对象
 			ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
 
-			// <4> 创建 ServletInvocableHandlerMethod 对象，并设置其相关属性
+			// <4> 创建 ServletInvocableHandlerMethod 对象，并设置其相关属性(相对handlerMethod增加了一些解析器处理)
 			ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
 			if (this.argumentResolvers != null) {
 				invocableMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers);

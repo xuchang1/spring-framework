@@ -34,6 +34,7 @@ import org.springframework.lang.Nullable;
  * @since 3.0
  * @param <T> the converted object type
  */
+// 数据格式转化，例如将java对象转化为json串
 public interface HttpMessageConverter<T> {
 
 	/**

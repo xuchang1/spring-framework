@@ -107,7 +107,7 @@ public class ViewNameMethodReturnValueHandler implements HandlerMethodReturnValu
 	 * @return "true" if the given view name is recognized as a redirect view
 	 * reference; "false" otherwise.
 	 */
-	// 判断是否为重定向的视图名
+	// 判断是否为重定向的视图名（返回的结果包含重定向字符串 redirect ，则进行重定向操作）
 	protected boolean isRedirectViewName(String viewName) {
 		return (PatternMatchUtils.simpleMatch(this.redirectPatterns, viewName) || viewName.startsWith("redirect:"));
 	}

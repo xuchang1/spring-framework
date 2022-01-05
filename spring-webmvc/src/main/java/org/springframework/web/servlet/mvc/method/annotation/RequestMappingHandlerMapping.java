@@ -405,6 +405,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	@Override
 	protected void registerHandlerMethod(Object handler, Method method, RequestMappingInfo mapping) {
 		super.registerHandlerMethod(handler, method, mapping);
+		// 如果参数被@RequestBody注解修饰，则请求体必须存在
 		updateConsumesCondition(mapping, method);
 	}
 
