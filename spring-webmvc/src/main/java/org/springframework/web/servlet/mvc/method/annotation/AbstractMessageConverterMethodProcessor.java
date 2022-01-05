@@ -16,20 +16,6 @@
 
 package org.springframework.web.servlet.mvc.method.annotation;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ParameterizedTypeReference;
@@ -38,13 +24,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.core.log.LogFormatUtils;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpOutputMessage;
-import org.springframework.http.HttpRange;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
+import org.springframework.http.*;
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotWritableException;
@@ -61,6 +41,13 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.*;
 
 /**
  * Extends {@link AbstractMessageConverterMethodArgumentResolver} with the ability to handle method
@@ -309,6 +296,7 @@ public abstract class AbstractMessageConverterMethodProcessor extends AbstractMe
 						addContentDispositionHeader(inputMessage, outputMessage);
 						// <5.3> 写入内容
 						if (genericConverter != null) {
+							// response数据解析出参数据（@ResponseBody 解析java对象为json串时，使用的MappingJackson2HttpMessageConverter，需要引入jackson的jar包）
 							genericConverter.write(body, targetType, selectedMediaType, outputMessage);
 						}
 						else {

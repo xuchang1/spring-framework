@@ -132,6 +132,8 @@ public class RequestResponseBodyMethodProcessor extends AbstractMessageConverter
 			NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
 
 		parameter = parameter.nestedIfOptional();
+
+		// 入参解析
 		Object arg = readWithMessageConverters(webRequest, parameter, parameter.getNestedGenericParameterType());
 		String name = Conventions.getVariableNameForParameter(parameter);
 
@@ -148,6 +150,7 @@ public class RequestResponseBodyMethodProcessor extends AbstractMessageConverter
 			}
 		}
 
+		// Optional 内嵌类型处理
 		return adaptArgumentIfNecessary(arg, parameter);
 	}
 
