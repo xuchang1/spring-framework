@@ -16,26 +16,6 @@
 
 package org.springframework.web.multipart.support;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.mail.internet.MimeUtility;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Part;
-
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
@@ -45,6 +25,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.mail.internet.MimeUtility;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * Spring MultipartHttpServletRequest adapter, wrapping a Servlet 3.0 HttpServletRequest
@@ -92,10 +80,13 @@ public class StandardMultipartHttpServletRequest extends AbstractMultipartHttpSe
 
 	private void parseRequest(HttpServletRequest request) {
 		try {
+			// 请求中的part集合
 			Collection<Part> parts = request.getParts();
 			this.multipartParameterNames = new LinkedHashSet<>(parts.size());
 			MultiValueMap<String, MultipartFile> files = new LinkedMultiValueMap<>(parts.size());
+			// <1> 遍历 parts 数组
 			for (Part part : parts) {
+				// 从header里面解析文件名，构建 MultipartFile 对象
 				String headerValue = part.getHeader(HttpHeaders.CONTENT_DISPOSITION);
 				ContentDisposition disposition = ContentDisposition.parse(headerValue);
 				String filename = disposition.getFilename();
@@ -106,9 +97,11 @@ public class StandardMultipartHttpServletRequest extends AbstractMultipartHttpSe
 					files.add(part.getName(), new StandardMultipartFile(part, filename));
 				}
 				else {
+					// 文件名为空，说明是普通参数，则添加 part.name 到 multipartParameterNames 中
 					this.multipartParameterNames.add(part.getName());
 				}
 			}
+			// <2> 设置到 multipartFiles 属性
 			setMultipartFiles(files);
 		}
 		catch (Throwable ex) {
@@ -131,6 +124,7 @@ public class StandardMultipartHttpServletRequest extends AbstractMultipartHttpSe
 
 	@Override
 	public Enumeration<String> getParameterNames() {
+		// 如果我们开启 lazyParsing 延迟解析的功能,在获取请求参数时会进行解析
 		if (this.multipartParameterNames == null) {
 			initializeMultipart();
 		}
