@@ -16,15 +16,14 @@
 
 package org.springframework.web.servlet.i18n;
 
-import java.util.Locale;
-import java.util.TimeZone;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.context.i18n.SimpleLocaleContext;
 import org.springframework.lang.Nullable;
 import org.springframework.web.servlet.LocaleContextResolver;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Abstract base class for {@link LocaleContextResolver} implementations.
@@ -38,6 +37,7 @@ import org.springframework.web.servlet.LocaleContextResolver;
  * @see #setDefaultLocale
  * @see #setDefaultTimeZone
  */
+// 提供对默认语言环境和默认时区的支持
 public abstract class AbstractLocaleContextResolver extends AbstractLocaleResolver implements LocaleContextResolver {
 
 	@Nullable
@@ -62,12 +62,14 @@ public abstract class AbstractLocaleContextResolver extends AbstractLocaleResolv
 
 	@Override
 	public Locale resolveLocale(HttpServletRequest request) {
+		// 子类实现
 		Locale locale = resolveLocaleContext(request).getLocale();
 		return (locale != null ? locale : request.getLocale());
 	}
 
 	@Override
 	public void setLocale(HttpServletRequest request, @Nullable HttpServletResponse response, @Nullable Locale locale) {
+		// 子类实现
 		setLocaleContext(request, response, (locale != null ? new SimpleLocaleContext(locale) : null));
 	}
 

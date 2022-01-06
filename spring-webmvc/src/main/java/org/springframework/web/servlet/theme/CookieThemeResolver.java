@@ -16,16 +16,16 @@
 
 package org.springframework.web.servlet.theme;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.ThemeResolver;
 import org.springframework.web.util.CookieGenerator;
 import org.springframework.web.util.WebUtils;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * {@link ThemeResolver} implementation that uses a cookie sent back to the user
@@ -87,12 +87,14 @@ public class CookieThemeResolver extends CookieGenerator implements ThemeResolve
 
 	@Override
 	public String resolveThemeName(HttpServletRequest request) {
+		// 请求属性中获取
 		// Check request for preparsed or preset theme.
 		String themeName = (String) request.getAttribute(THEME_REQUEST_ATTRIBUTE_NAME);
 		if (themeName != null) {
 			return themeName;
 		}
 
+		// cookie中获取
 		// Retrieve cookie value from request.
 		String cookieName = getCookieName();
 		if (cookieName != null) {
@@ -106,9 +108,11 @@ public class CookieThemeResolver extends CookieGenerator implements ThemeResolve
 		}
 
 		// Fall back to default theme.
+		// 使用默认的
 		if (themeName == null) {
 			themeName = getDefaultThemeName();
 		}
+		// 设置到属性中
 		request.setAttribute(THEME_REQUEST_ATTRIBUTE_NAME, themeName);
 		return themeName;
 	}
@@ -121,10 +125,12 @@ public class CookieThemeResolver extends CookieGenerator implements ThemeResolve
 
 		if (StringUtils.hasText(themeName)) {
 			// Set request attribute and add cookie.
+			// 设置request属性中，并添加到cookie中
 			request.setAttribute(THEME_REQUEST_ATTRIBUTE_NAME, themeName);
 			addCookie(response, themeName);
 		}
 		else {
+			// 设置默认的
 			// Set request attribute to fallback theme and remove cookie.
 			request.setAttribute(THEME_REQUEST_ATTRIBUTE_NAME, getDefaultThemeName());
 			removeCookie(response);
