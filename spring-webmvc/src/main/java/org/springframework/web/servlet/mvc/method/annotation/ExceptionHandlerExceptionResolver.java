@@ -106,14 +106,21 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 	@Nullable
 	private ApplicationContext applicationContext;
 
+	/**
+	 * 处理器handler类型 -> ExceptionHandlerMethodResolver封装的映射
+	 */
 	private final Map<Class<?>, ExceptionHandlerMethodResolver> exceptionHandlerCache =
 			new ConcurrentHashMap<>(64);
 
+	/**
+	 * 异常通知bean -> 异常方法解析器映射
+	 */
 	private final Map<ControllerAdviceBean, ExceptionHandlerMethodResolver> exceptionHandlerAdviceCache =
 			new LinkedHashMap<>();
 
 
 	public ExceptionHandlerExceptionResolver() {
+		// 消息转化的实现类缓存
 		this.messageConverters = new ArrayList<>();
 		this.messageConverters.add(new ByteArrayHttpMessageConverter());
 		this.messageConverters.add(new StringHttpMessageConverter());
@@ -251,26 +258,30 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 		}
 	}
 
-	@Override
-	public void setApplicationContext(@Nullable ApplicationContext applicationContext) {
-		this.applicationContext = applicationContext;
-	}
-
 	@Nullable
 	public ApplicationContext getApplicationContext() {
 		return this.applicationContext;
+	}
+
+	@Override
+	public void setApplicationContext(@Nullable ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
 	}
 
 
 	@Override
 	public void afterPropertiesSet() {
 		// Do this first, it may add ResponseBodyAdvice beans
+		// 异常通知类解析并缓存
 		initExceptionHandlerAdviceCache();
 
+		// 参数解析器
 		if (this.argumentResolvers == null) {
 			List<HandlerMethodArgumentResolver> resolvers = getDefaultArgumentResolvers();
 			this.argumentResolvers = new HandlerMethodArgumentResolverComposite().addResolvers(resolvers);
 		}
+
+		// 返回值解析器
 		if (this.returnValueHandlers == null) {
 			List<HandlerMethodReturnValueHandler> handlers = getDefaultReturnValueHandlers();
 			this.returnValueHandlers = new HandlerMethodReturnValueHandlerComposite().addHandlers(handlers);
@@ -282,16 +293,21 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 			return;
 		}
 
+		// 被 @ControllerAdvice 注解注释，解析成 ControllerAdviceBean 对象数据
 		List<ControllerAdviceBean> adviceBeans = ControllerAdviceBean.findAnnotatedBeans(getApplicationContext());
 		for (ControllerAdviceBean adviceBean : adviceBeans) {
 			Class<?> beanType = adviceBean.getBeanType();
 			if (beanType == null) {
 				throw new IllegalStateException("Unresolvable type for ControllerAdviceBean: " + adviceBean);
 			}
+
+			// 解析 @ControllerAdvice 被修饰的类，如果有方法上有被 @ExceptionHandler 修饰，解析并缓存（异常处理通知类）
 			ExceptionHandlerMethodResolver resolver = new ExceptionHandlerMethodResolver(beanType);
 			if (resolver.hasExceptionMappings()) {
 				this.exceptionHandlerAdviceCache.put(adviceBean, resolver);
 			}
+
+			// ResponseBodyAdvice 类型通知类缓存
 			if (ResponseBodyAdvice.class.isAssignableFrom(beanType)) {
 				this.responseBodyAdvice.add(adviceBean);
 			}
@@ -417,14 +433,19 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 			}
 			// Expose causes as provided arguments as well
 			Throwable exToExpose = exception;
+			// 迭代获取 cause
 			while (exToExpose != null) {
 				exceptions.add(exToExpose);
 				Throwable cause = exToExpose.getCause();
 				exToExpose = (cause != exToExpose ? cause : null);
 			}
+
+			// 多出来的一个缓存handlerMethod
 			Object[] arguments = new Object[exceptions.size() + 1];
 			exceptions.toArray(arguments);  // efficient arraycopy call in ArrayList
 			arguments[arguments.length - 1] = handlerMethod;
+
+			// 这个参数封装的调用逻辑是啥意思？
 			exceptionHandlerMethod.invokeAndHandle(webRequest, mavContainer, arguments);
 		}
 		catch (Throwable invocationEx) {
@@ -436,11 +457,12 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 			// Continue with default processing of the original exception...
 			return null;
 		}
-
+		// 如果 mavContainer 已处理，则返回“空”的 ModelAndView 对象。
 		if (mavContainer.isRequestHandled()) {
 			return new ModelAndView();
 		}
 		else {
+			// 如果 mavContainer 未处，则基于 `mavContainer` 生成 ModelAndView 对象
 			ModelMap model = mavContainer.getModel();
 			HttpStatus status = mavContainer.getStatus();
 			ModelAndView mav = new ModelAndView(mavContainer.getViewName(), model, status);
@@ -467,6 +489,7 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 	 * @return a method to handle the exception, or {@code null} if none
 	 */
 	@Nullable
+	// 优先从handlerMethod对应的类中找到当前异常的处理方法（handlerMethod为null时，如果存在未设置属性的异常处理类则可以返回）
 	protected ServletInvocableHandlerMethod getExceptionHandlerMethod(
 			@Nullable HandlerMethod handlerMethod, Exception exception) {
 
@@ -481,12 +504,16 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 				resolver = new ExceptionHandlerMethodResolver(handlerType);
 				this.exceptionHandlerCache.put(handlerType, resolver);
 			}
+
+			// 异常处理的方法
 			Method method = resolver.resolveMethod(exception);
 			if (method != null) {
+				// 封装获取可调用的ServletInvocableHandlerMethod
 				return new ServletInvocableHandlerMethod(handlerMethod.getBean(), method);
 			}
 			// For advice applicability check below (involving base packages, assignable types
 			// and annotation presence), use target class instead of interface-based proxy.
+			// 被代理了获取目标类型
 			if (Proxy.isProxyClass(handlerType)) {
 				handlerType = AopUtils.getTargetClass(handlerMethod.getBean());
 			}
@@ -494,7 +521,9 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 
 		for (Map.Entry<ControllerAdviceBean, ExceptionHandlerMethodResolver> entry : this.exceptionHandlerAdviceCache.entrySet()) {
 			ControllerAdviceBean advice = entry.getKey();
+			// 当前通知的类型能否处理该 handlerType（注解中的内容与当前 handlerType 是否匹配）
 			if (advice.isApplicableToBeanType(handlerType)) {
+				// 能处理的进行解析封装返回
 				ExceptionHandlerMethodResolver resolver = entry.getValue();
 				Method method = resolver.resolveMethod(exception);
 				if (method != null) {

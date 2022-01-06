@@ -72,15 +72,18 @@ public class ResponseStatusExceptionResolver extends AbstractHandlerExceptionRes
 			HttpServletRequest request, HttpServletResponse response, @Nullable Object handler, Exception ex) {
 
 		try {
+			// 异常为 ResponseStatusException 实例处理
 			if (ex instanceof ResponseStatusException) {
 				return resolveResponseStatusException((ResponseStatusException) ex, request, response, handler);
 			}
 
+			// 异常类被 @ResponseStatus 注解修饰处理
 			ResponseStatus status = AnnotatedElementUtils.findMergedAnnotation(ex.getClass(), ResponseStatus.class);
 			if (status != null) {
 				return resolveResponseStatus(status, request, response, handler, ex);
 			}
 
+			// 迭代cause处理
 			if (ex.getCause() instanceof Exception) {
 				return doResolveException(request, response, handler, (Exception) ex.getCause());
 			}
@@ -110,6 +113,7 @@ public class ResponseStatusExceptionResolver extends AbstractHandlerExceptionRes
 
 		int statusCode = responseStatus.code().value();
 		String reason = responseStatus.reason();
+		// response 设置异常状态码及reason，返回空的ModelAndView
 		return applyStatusAndReason(statusCode, reason, response);
 	}
 
@@ -130,9 +134,11 @@ public class ResponseStatusExceptionResolver extends AbstractHandlerExceptionRes
 	protected ModelAndView resolveResponseStatusException(ResponseStatusException ex,
 			HttpServletRequest request, HttpServletResponse response, @Nullable Object handler) throws Exception {
 
+		// 异常中包含的header信息添加到response中
 		ex.getResponseHeaders().forEach((name, values) ->
 				values.forEach(value -> response.addHeader(name, value)));
 
+		// response 设置异常状态码及reason，返回空的ModelAndView
 		return applyStatusAndReason(ex.getRawStatusCode(), ex.getReason(), response);
 	}
 
@@ -150,13 +156,16 @@ public class ResponseStatusExceptionResolver extends AbstractHandlerExceptionRes
 	protected ModelAndView applyStatusAndReason(int statusCode, @Nullable String reason, HttpServletResponse response)
 			throws IOException {
 
+		// 无错误提示，则只响应状态码
 		if (!StringUtils.hasLength(reason)) {
 			response.sendError(statusCode);
 		}
 		else {
+			// Reason解析
 			String resolvedReason = (this.messageSource != null ?
 					this.messageSource.getMessage(reason, null, reason, LocaleContextHolder.getLocale()) :
 					reason);
+			// 设置错误状态码及提示
 			response.sendError(statusCode, resolvedReason);
 		}
 		return new ModelAndView();

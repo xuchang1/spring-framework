@@ -40,15 +40,18 @@ public abstract class AbstractHandlerMethodExceptionResolver extends AbstractHan
 	 */
 	@Override
 	protected boolean shouldApplyTo(HttpServletRequest request, @Nullable Object handler) {
+		// 为空调用父类判断
 		if (handler == null) {
 			return super.shouldApplyTo(request, null);
 		}
 		else if (handler instanceof HandlerMethod) {
+			// HandlerMethod 类型，获取对应handler调用父类方法进行判断
 			HandlerMethod handlerMethod = (HandlerMethod) handler;
 			handler = handlerMethod.getBean();
 			return super.shouldApplyTo(request, handler);
 		}
 		else if (hasGlobalExceptionHandlers() && hasHandlerMappings()) {
+			// 存在全局异常处理器且当前异常处理器只处理缓存handler，则父类判断
 			return super.shouldApplyTo(request, handler);
 		}
 		else {

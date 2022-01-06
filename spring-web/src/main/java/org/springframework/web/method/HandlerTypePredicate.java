@@ -71,9 +71,11 @@ public final class HandlerTypePredicate implements Predicate<Class<?>> {
 
 	@Override
 	public boolean test(@Nullable Class<?> controllerType) {
+		// 都为空返回true
 		if (!hasSelectors()) {
 			return true;
 		}
+		// 注解内容匹配判断
 		else if (controllerType != null) {
 			for (String basePackage : this.basePackages) {
 				if (controllerType.getName().startsWith(basePackage)) {

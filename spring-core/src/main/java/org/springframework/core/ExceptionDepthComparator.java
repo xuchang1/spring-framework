@@ -61,6 +61,9 @@ public class ExceptionDepthComparator implements Comparator<Class<? extends Thro
 		return (depth1 - depth2);
 	}
 
+	/**
+	 * 继承越深，值越大
+	 */
 	private int getDepth(Class<?> declaredException, Class<?> exceptionToMatch, int depth) {
 		if (exceptionToMatch.equals(declaredException)) {
 			// Found it!
@@ -70,6 +73,7 @@ public class ExceptionDepthComparator implements Comparator<Class<? extends Thro
 		if (exceptionToMatch == Throwable.class) {
 			return Integer.MAX_VALUE;
 		}
+		// 往父类遍历判断
 		return getDepth(declaredException, exceptionToMatch.getSuperclass(), depth + 1);
 	}
 

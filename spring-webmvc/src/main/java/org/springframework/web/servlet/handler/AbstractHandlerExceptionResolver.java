@@ -52,15 +52,24 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
+	/**
+	 * 该异常处理器能处理的handler缓存
+	 */
 	@Nullable
 	private Set<?> mappedHandlers;
 
+	/**
+	 * 该异常处理器能处理的handler class缓存
+	 */
 	@Nullable
 	private Class<?>[] mappedHandlerClasses;
 
 	@Nullable
 	private Log warnLogger;
 
+	/**
+	 * 防止响应缓存
+	 */
 	private boolean preventResponseCaching = false;
 
 
@@ -135,9 +144,13 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 	@Nullable
 	public ModelAndView resolveException(
 			HttpServletRequest request, HttpServletResponse response, @Nullable Object handler, Exception ex) {
-
+		// 判断该异常处理器能否处理当前 handler
 		if (shouldApplyTo(request, handler)) {
+
+			// response 缓存相关的处理
 			prepareResponse(ex, response);
+
+			// 解析异常，生成ModelAndView，子类实现
 			ModelAndView result = doResolveException(request, response, handler, ex);
 			if (result != null) {
 				// Print debug message when warn logger is not enabled.
@@ -169,6 +182,7 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 	 */
 	protected boolean shouldApplyTo(HttpServletRequest request, @Nullable Object handler) {
 		if (handler != null) {
+			// 异常处理器是否能处理当前handler
 			if (this.mappedHandlers != null && this.mappedHandlers.contains(handler)) {
 				return true;
 			}
@@ -180,6 +194,7 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 				}
 			}
 		}
+		// 没有设置handler缓存，则都能处理
 		return !hasHandlerMappings();
 	}
 

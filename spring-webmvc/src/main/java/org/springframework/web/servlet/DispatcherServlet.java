@@ -489,10 +489,13 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// HandlerMapping（容器中查找，未找到通过spi机制，从默认路径配置文件中查找，使用默认的配置）
 		initHandlerMappings(context);
+
 		// HandlerAdapter（同上）
 		initHandlerAdapters(context);
 
+		// 异常解析器
 		initHandlerExceptionResolvers(context);
+
 		initRequestToViewNameTranslator(context);
 		initViewResolvers(context);
 		initFlashMapManager(context);

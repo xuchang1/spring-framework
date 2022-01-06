@@ -43,24 +43,39 @@ import org.springframework.web.util.WebUtils;
  * @since 22.11.2003
  * @see org.springframework.web.servlet.DispatcherServlet
  */
+// 一个简单的映射解析器，处理指定异常名称 -> 视图的映射，简单可理解为触发指定异常时跳到对应视图上
 public class SimpleMappingExceptionResolver extends AbstractHandlerExceptionResolver {
 
 	/** The default name of the exception attribute: "exception". */
 	public static final String DEFAULT_EXCEPTION_ATTRIBUTE = "exception";
 
-
+	/**
+	 * 属性注入，异常类型 -> 视图名称的映射
+	 */
 	@Nullable
 	private Properties exceptionMappings;
 
+	/**
+	 * 不处理的异常类型缓存
+	 */
 	@Nullable
 	private Class<?>[] excludedExceptions;
 
+	/**
+	 * 默认的视图名称
+	 */
 	@Nullable
 	private String defaultErrorView;
 
+	/**
+	 * 默认的响应码
+	 */
 	@Nullable
 	private Integer defaultStatusCode;
 
+	/**
+	 * 视图名称 -> 响应码的映射
+	 */
 	private Map<String, Integer> statusCodes = new HashMap<>();
 
 	@Nullable
@@ -186,14 +201,18 @@ public class SimpleMappingExceptionResolver extends AbstractHandlerExceptionReso
 			HttpServletRequest request, HttpServletResponse response, @Nullable Object handler, Exception ex) {
 
 		// Expose ModelAndView for chosen error view.
+		// <1> 获得异常对应的视图
 		String viewName = determineViewName(ex, request);
 		if (viewName != null) {
 			// Apply HTTP status code for error views, if specified.
 			// Only apply it if we're processing a top-level request.
+			// <2> 获得视图对应的状态码
 			Integer statusCode = determineStatusCode(request, viewName);
+			// <3> 设置状态码到response中
 			if (statusCode != null) {
 				applyStatusCodeIfPossible(request, response, statusCode);
 			}
+			// <4> 创建 ModelAndView 对象，并返回
 			return getModelAndView(viewName, ex, request);
 		}
 		else {
@@ -221,6 +240,7 @@ public class SimpleMappingExceptionResolver extends AbstractHandlerExceptionReso
 			}
 		}
 		// Check for specific exception mappings.
+		// 缓存中查询，找到最优的视图名称
 		if (this.exceptionMappings != null) {
 			viewName = findMatchingViewName(this.exceptionMappings, ex);
 		}
@@ -229,6 +249,7 @@ public class SimpleMappingExceptionResolver extends AbstractHandlerExceptionReso
 			if (logger.isDebugEnabled()) {
 				logger.debug("Resolving to default view '" + this.defaultErrorView + "'");
 			}
+			// 未找到使用默认的视图名称
 			viewName = this.defaultErrorView;
 		}
 		return viewName;
@@ -246,9 +267,12 @@ public class SimpleMappingExceptionResolver extends AbstractHandlerExceptionReso
 		String viewName = null;
 		String dominantMapping = null;
 		int deepest = Integer.MAX_VALUE;
+		// 属性名称为异常的类型
 		for (Enumeration<?> names = exceptionMappings.propertyNames(); names.hasMoreElements();) {
 			String exceptionMapping = (String) names.nextElement();
 			int depth = getDepth(exceptionMapping, ex);
+
+			// 如果层级更低，则使用它
 			if (depth >= 0 && (depth < deepest || (depth == deepest &&
 					dominantMapping != null && exceptionMapping.length() > dominantMapping.length()))) {
 				deepest = depth;
@@ -298,6 +322,7 @@ public class SimpleMappingExceptionResolver extends AbstractHandlerExceptionReso
 	 */
 	@Nullable
 	protected Integer determineStatusCode(HttpServletRequest request, String viewName) {
+		// 视图对应的响应状态码
 		if (this.statusCodes.containsKey(viewName)) {
 			return this.statusCodes.get(viewName);
 		}
@@ -348,6 +373,7 @@ public class SimpleMappingExceptionResolver extends AbstractHandlerExceptionReso
 	protected ModelAndView getModelAndView(String viewName, Exception ex) {
 		ModelAndView mv = new ModelAndView(viewName);
 		if (this.exceptionAttribute != null) {
+			// Model中设置异常信息
 			mv.addObject(this.exceptionAttribute, ex);
 		}
 		return mv;

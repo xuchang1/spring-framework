@@ -62,9 +62,14 @@ public class ExceptionHandlerMethodResolver {
 		}
 	}
 
-
+	/**
+	 * 异常类型 -> 方法处理的映射
+	 */
 	private final Map<Class<? extends Throwable>, Method> mappedMethods = new HashMap<>(16);
 
+	/**
+	 * 已被匹配过的映射放到该缓存中，减少每次重新匹配的逻辑
+	 */
 	private final Map<Class<? extends Throwable>, Method> exceptionLookupCache = new ConcurrentReferenceHashMap<>(16);
 
 
@@ -73,6 +78,7 @@ public class ExceptionHandlerMethodResolver {
 	 * @param handlerType the type to introspect
 	 */
 	public ExceptionHandlerMethodResolver(Class<?> handlerType) {
+		// 被 @ExceptionHandler 注解修饰的方法集合
 		for (Method method : MethodIntrospector.selectMethods(handlerType, EXCEPTION_HANDLER_METHODS)) {
 			for (Class<? extends Throwable> exceptionType : detectExceptionMappings(method)) {
 				addExceptionMapping(exceptionType, method);
@@ -88,14 +94,18 @@ public class ExceptionHandlerMethodResolver {
 	@SuppressWarnings("unchecked")
 	private List<Class<? extends Throwable>> detectExceptionMappings(Method method) {
 		List<Class<? extends Throwable>> result = new ArrayList<>();
+		// 异常类型解析添加到 result
 		detectAnnotationExceptionMappings(method, result);
 		if (result.isEmpty()) {
+			// 为空时解析 方法参数类型，为异常类型时进行添加
 			for (Class<?> paramType : method.getParameterTypes()) {
 				if (Throwable.class.isAssignableFrom(paramType)) {
 					result.add((Class<? extends Throwable>) paramType);
 				}
 			}
 		}
+
+		// 还未空，表示未映射到异常，抛出异常
 		if (result.isEmpty()) {
 			throw new IllegalStateException("No exception types mapped to " + method);
 		}
@@ -109,6 +119,7 @@ public class ExceptionHandlerMethodResolver {
 	}
 
 	private void addExceptionMapping(Class<? extends Throwable> exceptionType, Method method) {
+		// 添加缓存，一类异常只被一个方法处理，出现多个时抛出异常
 		Method oldMethod = this.mappedMethods.put(exceptionType, method);
 		if (oldMethod != null && !oldMethod.equals(method)) {
 			throw new IllegalStateException("Ambiguous @ExceptionHandler method mapped for [" +
@@ -143,8 +154,10 @@ public class ExceptionHandlerMethodResolver {
 	 */
 	@Nullable
 	public Method resolveMethodByThrowable(Throwable exception) {
+		// 从缓存中获取当前异常对应的Method
 		Method method = resolveMethodByExceptionType(exception.getClass());
 		if (method == null) {
+			// 其次，获取不到，则使用异常 cause 对应的方法
 			Throwable cause = exception.getCause();
 			if (cause != null) {
 				method = resolveMethodByThrowable(cause);
@@ -160,6 +173,7 @@ public class ExceptionHandlerMethodResolver {
 	 * @param exceptionType the exception type
 	 * @return a Method to handle the exception, or {@code null} if none found
 	 */
+	// 两层缓存中查询Method，两层缓存是为了减少匹配逻辑的处理，一个异常可能有多个父类异常处理器，第二层缓存了最优解
 	@Nullable
 	public Method resolveMethodByExceptionType(Class<? extends Throwable> exceptionType) {
 		Method method = this.exceptionLookupCache.get(exceptionType);
@@ -177,6 +191,7 @@ public class ExceptionHandlerMethodResolver {
 	private Method getMappedMethod(Class<? extends Throwable> exceptionType) {
 		List<Class<? extends Throwable>> matches = new ArrayList<>();
 		for (Class<? extends Throwable> mappedException : this.mappedMethods.keySet()) {
+			// 当前异常是否为缓存中异常的实现类，是则添加到matches中
 			if (mappedException.isAssignableFrom(exceptionType)) {
 				matches.add(mappedException);
 			}
@@ -185,6 +200,7 @@ public class ExceptionHandlerMethodResolver {
 			if (matches.size() > 1) {
 				matches.sort(new ExceptionDepthComparator(exceptionType));
 			}
+			// 排序获取最优解（获取继承最深的）
 			return this.mappedMethods.get(matches.get(0));
 		}
 		else {
