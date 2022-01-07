@@ -16,19 +16,18 @@
 
 package org.springframework.web.servlet.view;
 
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.context.support.WebApplicationObjectSupport;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Convenient base class for {@link org.springframework.web.servlet.ViewResolver}
@@ -68,20 +67,26 @@ public abstract class AbstractCachingViewResolver extends WebApplicationObjectSu
 	private volatile int cacheLimit = DEFAULT_CACHE_LIMIT;
 
 	/** Whether we should refrain from resolving views again if unresolved once. */
+	// 能否缓存未解析成功数据
 	private boolean cacheUnresolved = true;
 
 	/** Filter function that determines if view should be cached. */
 	private CacheFilter cacheFilter = DEFAULT_CACHE_FILTER;
 
 	/** Fast access cache for Views, returning already cached instances without a global lock. */
+	/**
+	 * viewkey -> View 缓存
+	 */
 	private final Map<Object, View> viewAccessCache = new ConcurrentHashMap<>(DEFAULT_CACHE_LIMIT);
 
 	/** Map from view key to View instance, synchronized for View creation. */
+	// 提供缓存上限控制功能（基于lru移除节点）
 	@SuppressWarnings("serial")
 	private final Map<Object, View> viewCreationCache =
 			new LinkedHashMap<Object, View>(DEFAULT_CACHE_LIMIT, 0.75f, true) {
 				@Override
 				protected boolean removeEldestEntry(Map.Entry<Object, View> eldest) {
+					// 超过阈值时，移除最老的节点
 					if (size() > getCacheLimit()) {
 						viewAccessCache.remove(eldest.getKey());
 						return true;
@@ -170,12 +175,14 @@ public abstract class AbstractCachingViewResolver extends WebApplicationObjectSu
 	@Override
 	@Nullable
 	public View resolveViewName(String viewName, Locale locale) throws Exception {
+		// 不走缓存
 		if (!isCache()) {
 			return createView(viewName, locale);
 		}
 		else {
 			Object cacheKey = getCacheKey(viewName, locale);
 			View view = this.viewAccessCache.get(cacheKey);
+			// 缓存尝试获取，未获取到创建并添加到缓存中
 			if (view == null) {
 				synchronized (this.viewCreationCache) {
 					view = this.viewCreationCache.get(cacheKey);

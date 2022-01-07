@@ -16,12 +16,12 @@
 
 package org.springframework.web.servlet.theme;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.WebUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * {@link org.springframework.web.servlet.ThemeResolver} implementation that
@@ -37,6 +37,7 @@ import org.springframework.web.util.WebUtils;
  * @since 17.06.2003
  * @see #setThemeName
  */
+// 走session获取，没有使用默认的
 public class SessionThemeResolver extends AbstractThemeResolver {
 
 	/**

@@ -16,17 +16,16 @@
 
 package org.springframework.web.servlet.i18n;
 
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.LocaleResolver;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.lang.Nullable;
-import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.LocaleResolver;
 
 /**
  * {@link LocaleResolver} implementation that simply uses the primary locale
@@ -41,6 +40,7 @@ import org.springframework.web.servlet.LocaleResolver;
  * @since 27.02.2003
  * @see javax.servlet.http.HttpServletRequest#getLocale()
  */
+// 依据请求头中的accept-language解析返回，即客户端的区域支持
 public class AcceptHeaderLocaleResolver implements LocaleResolver {
 
 	private final List<Locale> supportedLocales = new ArrayList<>(4);
@@ -95,10 +95,13 @@ public class AcceptHeaderLocaleResolver implements LocaleResolver {
 
 	@Override
 	public Locale resolveLocale(HttpServletRequest request) {
+		// 如果本地默认不为空且请求头中没有Accept-Languag，使用默认的
 		Locale defaultLocale = getDefaultLocale();
 		if (defaultLocale != null && request.getHeader("Accept-Language") == null) {
 			return defaultLocale;
 		}
+
+		// 支持的列表为空或者包含请求头中的Accept-Language，则返回请求头中内容
 		Locale requestLocale = request.getLocale();
 		List<Locale> supportedLocales = getSupportedLocales();
 		if (supportedLocales.isEmpty() || supportedLocales.contains(requestLocale)) {

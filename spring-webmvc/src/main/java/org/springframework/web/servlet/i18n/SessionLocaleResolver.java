@@ -16,16 +16,15 @@
 
 package org.springframework.web.servlet.i18n;
 
-import java.util.Locale;
-import java.util.TimeZone;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.context.i18n.LocaleContext;
 import org.springframework.context.i18n.TimeZoneAwareLocaleContext;
 import org.springframework.lang.Nullable;
 import org.springframework.web.util.WebUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * {@link org.springframework.web.servlet.LocaleResolver} implementation that
@@ -121,8 +120,10 @@ public class SessionLocaleResolver extends AbstractLocaleContextResolver {
 		return new TimeZoneAwareLocaleContext() {
 			@Override
 			public Locale getLocale() {
+				// session中获取Locale
 				Locale locale = (Locale) WebUtils.getSessionAttribute(request, localeAttributeName);
 				if (locale == null) {
+					// 不存在则使用默认的，默认的为空从请求头中获取
 					locale = determineDefaultLocale(request);
 				}
 				return locale;
@@ -130,8 +131,10 @@ public class SessionLocaleResolver extends AbstractLocaleContextResolver {
 			@Override
 			@Nullable
 			public TimeZone getTimeZone() {
+				// session中获取时区
 				TimeZone timeZone = (TimeZone) WebUtils.getSessionAttribute(request, timeZoneAttributeName);
 				if (timeZone == null) {
+					// 为空则使用默认的
 					timeZone = determineDefaultTimeZone(request);
 				}
 				return timeZone;

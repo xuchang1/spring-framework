@@ -508,6 +508,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	private void initMultipartResolver(ApplicationContext context) {
 		try {
+			// 默认情况下，multipartResolver 对应的是 StandardServletMultipartResolver 类的 Bean 对象。
 			this.multipartResolver = context.getBean(MULTIPART_RESOLVER_BEAN_NAME, MultipartResolver.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Detected " + this.multipartResolver);

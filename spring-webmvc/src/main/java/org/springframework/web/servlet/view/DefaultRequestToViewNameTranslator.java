@@ -16,14 +16,14 @@
 
 package org.springframework.web.servlet.view;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.RequestToViewNameTranslator;
 import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * {@link RequestToViewNameTranslator} that simply transforms the URI of
@@ -190,15 +190,19 @@ public class DefaultRequestToViewNameTranslator implements RequestToViewNameTran
 	@Nullable
 	protected String transformPath(String lookupPath) {
 		String path = lookupPath;
+		// 移除前缀
 		if (this.stripLeadingSlash && path.startsWith(SLASH)) {
 			path = path.substring(1);
 		}
+		// 移除后缀
 		if (this.stripTrailingSlash && path.endsWith(SLASH)) {
 			path = path.substring(0, path.length() - 1);
 		}
+		// 移除扩展名
 		if (this.stripExtension) {
 			path = StringUtils.stripFilenameExtension(path);
 		}
+		// 替换分隔符
 		if (!SLASH.equals(this.separator)) {
 			path = StringUtils.replace(path, SLASH, this.separator);
 		}
