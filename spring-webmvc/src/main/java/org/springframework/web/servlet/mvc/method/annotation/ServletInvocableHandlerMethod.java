@@ -16,15 +16,6 @@
 
 package org.springframework.web.servlet.mvc.method.annotation;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.concurrent.Callable;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.core.KotlinDetector;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
@@ -44,6 +35,14 @@ import org.springframework.web.method.support.InvocableHandlerMethod;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.View;
 import org.springframework.web.util.NestedServletException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.concurrent.Callable;
 
 /**
  * Extends {@link InvocableHandlerMethod} with the ability to handle return
@@ -117,6 +116,8 @@ public class ServletInvocableHandlerMethod extends InvocableHandlerMethod {
 			}
 		}
 		else if (StringUtils.hasText(getResponseStatusReason())) {
+			// 注意此处，如果设置了responseStatusReason，返回值并没有被写到response中
+			// 例如全局异常处理时，同时配置了 @@ExceptionHandler和@ResponseStatus注解，并且设置了Reason，那么其实这个异常处理方法是无用的，只触发了@ResponseStatus的逻辑
 			mavContainer.setRequestHandled(true);
 			return;
 		}

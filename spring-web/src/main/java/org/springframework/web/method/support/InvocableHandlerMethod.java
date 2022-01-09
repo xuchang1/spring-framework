@@ -167,6 +167,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			parameter.initParameterNameDiscovery(this.parameterNameDiscoverer);
 
 			// <1> 先从 providedArgs 中获得参数。如果未获得到，则进入下一个参数的解析
+			// （根据参数类型判断，所以要注意参数类型的问题。例如自定义全局异常处理机制时，会触发传参）
 			args[i] = findProvidedArgument(parameter, providedArgs);
 			if (args[i] != null) {
 				continue;

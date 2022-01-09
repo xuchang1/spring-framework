@@ -16,14 +16,6 @@
 
 package org.springframework.web.servlet.mvc.condition;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
@@ -36,6 +28,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.servlet.mvc.condition.HeadersRequestCondition.HeaderExpression;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 /**
  * A logical disjunction (' || ') request condition to match a request's 'Accept' header
@@ -254,14 +249,18 @@ public final class ProducesRequestCondition extends AbstractRequestCondition<Pro
 	@Override
 	public int compareTo(ProducesRequestCondition other, HttpServletRequest request) {
 		try {
+			// 获取请求的 MediaType 集合
 			List<MediaType> acceptedMediaTypes = getAcceptedMediaTypes(request);
 			for (MediaType acceptedMediaType : acceptedMediaTypes) {
+				// 请求的 acceptedMediaType 在当前ProducesRequestCondition缓存的MediaType集合索引位置（比较大类和子类type判断）
+				// 说明 MediaType 是有优先级的，越靠后排序越高（索引值越大，越容易被选中，也就是命中的MediaType要靠后）
 				int thisIndex = this.indexOfEqualMediaType(acceptedMediaType);
 				int otherIndex = other.indexOfEqualMediaType(acceptedMediaType);
 				int result = compareMatchingMediaTypes(this, thisIndex, other, otherIndex);
 				if (result != 0) {
 					return result;
 				}
+				// 包含逻辑的判断（通配符逻辑处理等）
 				thisIndex = this.indexOfIncludedMediaType(acceptedMediaType);
 				otherIndex = other.indexOfIncludedMediaType(acceptedMediaType);
 				result = compareMatchingMediaTypes(this, thisIndex, other, otherIndex);
@@ -290,8 +289,10 @@ public final class ProducesRequestCondition extends AbstractRequestCondition<Pro
 	}
 
 	private int indexOfEqualMediaType(MediaType mediaType) {
+		// 变量当前 ProducesRequestCondition 中的 MediaType
 		for (int i = 0; i < getExpressionsToCompare().size(); i++) {
 			MediaType currentMediaType = getExpressionsToCompare().get(i).getMediaType();
+			// 大类和子类同时相等时，才返回
 			if (mediaType.getType().equalsIgnoreCase(currentMediaType.getType()) &&
 					mediaType.getSubtype().equalsIgnoreCase(currentMediaType.getSubtype())) {
 				return i;
@@ -313,10 +314,12 @@ public final class ProducesRequestCondition extends AbstractRequestCondition<Pro
 			ProducesRequestCondition condition2, int index2) {
 
 		int result = 0;
+		// 注意此处是反过来的
 		if (index1 != index2) {
 			result = index2 - index1;
 		}
 		else if (index1 != -1) {
+			// 索引相同的情况下，比较其 质量
 			ProduceMediaTypeExpression expr1 = condition1.getExpressionsToCompare().get(index1);
 			ProduceMediaTypeExpression expr2 = condition2.getExpressionsToCompare().get(index2);
 			result = expr1.compareTo(expr2);
