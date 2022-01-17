@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 封装了切点和通知，切点用来判断类是否进行增强，通知是增强的具体方法
 public class AspectJPointcutAdvisor implements PointcutAdvisor, Ordered {
 
 	private final AbstractAspectJAdvice advice;

@@ -125,6 +125,7 @@ public abstract class AutoProxyUtils {
 	 * @since 5.1
 	 * @see AutowireCapableBeanFactory#ORIGINAL_INSTANCE_SUFFIX
 	 */
+	// ORIGINAL 类型的实现
 	static boolean isOriginalInstance(String beanName, Class<?> beanClass) {
 		if (!StringUtils.hasLength(beanName) || beanName.length() !=
 				beanClass.getName().length() + AutowireCapableBeanFactory.ORIGINAL_INSTANCE_SUFFIX.length()) {

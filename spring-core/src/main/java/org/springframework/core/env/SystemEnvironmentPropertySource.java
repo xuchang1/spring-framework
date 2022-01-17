@@ -16,10 +16,10 @@
 
 package org.springframework.core.env;
 
-import java.util.Map;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.util.Map;
 
 /**
  * Specialization of {@link MapPropertySource} designed for use with
@@ -95,6 +95,8 @@ public class SystemEnvironmentPropertySource extends MapPropertySource {
 			logger.debug("PropertySource '" + getName() + "' does not contain property '" + name +
 					"', but found equivalent '" + actualName + "'");
 		}
+
+		// 获取对应的值
 		return super.getProperty(actualName);
 	}
 
@@ -105,10 +107,14 @@ public class SystemEnvironmentPropertySource extends MapPropertySource {
 	 */
 	protected final String resolvePropertyName(String name) {
 		Assert.notNull(name, "Property name must not be null");
+
+		// 校验name，各种替换
 		String resolvedName = checkPropertyName(name);
 		if (resolvedName != null) {
 			return resolvedName;
 		}
+
+		// 转化为大写后，继续尝试
 		String uppercasedName = name.toUpperCase();
 		if (!name.equals(uppercasedName)) {
 			resolvedName = checkPropertyName(uppercasedName);
@@ -122,20 +128,28 @@ public class SystemEnvironmentPropertySource extends MapPropertySource {
 	@Nullable
 	private String checkPropertyName(String name) {
 		// Check name as-is
+		// 包含name直接返回
 		if (containsKey(name)) {
 			return name;
 		}
+
+
 		// Check name with just dots replaced
+		// 如果包含'.'，替换为'_'后在属性中，则返回
 		String noDotName = name.replace('.', '_');
 		if (!name.equals(noDotName) && containsKey(noDotName)) {
 			return noDotName;
 		}
+
 		// Check name with just hyphens replaced
+		// '-' 替换为 '_'
 		String noHyphenName = name.replace('-', '_');
 		if (!name.equals(noHyphenName) && containsKey(noHyphenName)) {
 			return noHyphenName;
 		}
+
 		// Check name with dots and hyphens replaced
+		// '-' 替换为 '_'
 		String noDotNoHyphenName = noDotName.replace('-', '_');
 		if (!noDotName.equals(noDotNoHyphenName) && containsKey(noDotNoHyphenName)) {
 			return noDotNoHyphenName;

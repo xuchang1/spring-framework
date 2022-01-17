@@ -33,6 +33,7 @@ import org.aopalliance.aop.Advice;
  * @author Rod Johnson
  * @author Juergen Hoeller
  */
+// 封装了Advice以及使用于当前Advice的filter过滤决定条件（子类封装）
 public interface Advisor {
 
 	/**

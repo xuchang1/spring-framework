@@ -6,7 +6,11 @@ package com.xc.study.config;
  */
 public class TimeHandler {
 
-	public void printTime() {
-		System.out.println("CurrentTime:" + System.currentTimeMillis());
+	public void printBeforeTime() {
+		System.out.println("beforeTime:" + System.currentTimeMillis());
+	}
+
+	public void printAfterTime() {
+		System.out.println("afterTime:" + System.currentTimeMillis());
 	}
 }

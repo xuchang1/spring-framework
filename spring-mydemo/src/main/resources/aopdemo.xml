@@ -13,8 +13,8 @@
 	<aop:config proxy-target-class="true">
 		<aop:aspect id="time" ref="timeHandler">
 			<aop:pointcut id="addAllMethod" expression="execution(* com.xc.study.service..*(..))" />
-			<aop:before method="printTime" pointcut-ref="addAllMethod" />
-			<aop:after method="printTime" pointcut-ref="addAllMethod" />
+			<aop:before method="printBeforeTime" pointcut-ref="addAllMethod" />
+			<aop:after method="printAfterTime" pointcut-ref="addAllMethod" />
 		</aop:aspect>
 	</aop:config>
 
