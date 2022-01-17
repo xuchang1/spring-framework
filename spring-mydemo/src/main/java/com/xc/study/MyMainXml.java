@@ -1,5 +1,6 @@
 package com.xc.study;
 
+import com.xc.study.service.AopTestService;
 import com.xc.study.xml.BeanB;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -13,8 +14,12 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class MyMainXml {
 
 	public static void main(String[] args) {
-		ApplicationContext applicationContext = new ClassPathXmlApplicationContext("demo.xml");
-		BeanB beanB = applicationContext.getBean(BeanB.class);
-		beanB.say();
+//		ApplicationContext applicationContext = new ClassPathXmlApplicationContext("demo.xml");
+//		BeanB beanB = applicationContext.getBean(BeanB.class);
+//		beanB.say();
+
+		ApplicationContext applicationContext = new ClassPathXmlApplicationContext("aopdemo.xml");
+		AopTestService aopTestService = applicationContext.getBean(AopTestService.class);
+		System.out.println(aopTestService.say("1"));
 	}
 }
