@@ -88,6 +88,7 @@ public class DefaultAdvisorAdapterRegistry implements AdvisorAdapterRegistry, Se
 		}
 		for (AdvisorAdapter adapter : this.adapters) {
 			if (adapter.supportsAdvice(advice)) {
+				// 通过AdvisorAdapter适配封装advisor，成 MethodInterceptor 拦截器
 				interceptors.add(adapter.getInterceptor(advisor));
 			}
 		}

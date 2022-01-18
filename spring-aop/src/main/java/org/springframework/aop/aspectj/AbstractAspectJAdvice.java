@@ -200,6 +200,7 @@ public abstract class AbstractAspectJAdvice implements Advice, AspectJPrecedence
 		Pointcut pc = getPointcut();
 		MethodMatcher safeMethodMatcher = MethodMatchers.intersection(
 				new AdviceExcludingMethodMatcher(this.aspectJAdviceMethod), pc.getMethodMatcher());
+		// 基于advice中的切点，封装为ComposablePointcut类型
 		return new ComposablePointcut(pc.getClassFilter(), safeMethodMatcher);
 	}
 

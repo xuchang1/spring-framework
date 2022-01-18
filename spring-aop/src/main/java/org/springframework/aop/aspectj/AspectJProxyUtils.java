@@ -51,7 +51,7 @@ public abstract class AspectJProxyUtils {
 			for (Advisor advisor : advisors) {
 				// Be careful not to get the Advice without a guard, as this might eagerly
 				// instantiate a non-singleton AspectJ aspect...
-				// 判断是否为切面
+				// 判断是否为切面通知
 				if (isAspectJAdvice(advisor)) {
 					foundAspectJAdvice = true;
 					break;

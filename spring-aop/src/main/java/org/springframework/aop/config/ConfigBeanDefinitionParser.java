@@ -367,7 +367,7 @@ class ConfigBeanDefinitionParser implements BeanDefinitionParser {
 			RootBeanDefinition methodDef, RootBeanDefinition aspectFactoryDef,
 			List<BeanDefinition> beanDefinitions, List<BeanReference> beanReferences) {
 
-		// 基于不同的 advice 类型，封装RootBeanDefinition
+		// 基于不同的 advice 类型，封装RootBeanDefinition(这个地方是重点，不同通知类型对应的不同class类)
 		RootBeanDefinition adviceDefinition = new RootBeanDefinition(getAdviceClass(adviceElement, parserContext));
 		adviceDefinition.setSource(parserContext.extractSource(adviceElement));
 
