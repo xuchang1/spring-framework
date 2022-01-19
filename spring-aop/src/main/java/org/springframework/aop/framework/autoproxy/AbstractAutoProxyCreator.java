@@ -448,25 +448,31 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		ProxyFactory proxyFactory = new ProxyFactory();
 		proxyFactory.copyFrom(this);
 
+		// 这个属性是从当前类复制过去的（是否是类代理，即cglib代理，可以通过配置参数proxy-target-class = "false" 来进行配置）
 		if (proxyFactory.isProxyTargetClass()) {
 			// Explicit handling of JDK proxy targets (for introduction advice scenarios)
+			// 判断当前类是否是代理类并且包含在代理缓存中
 			if (Proxy.isProxyClass(beanClass)) {
 				// Must allow for introductions; can't just set interfaces to the proxy's interfaces only.
 				for (Class<?> ifc : beanClass.getInterfaces()) {
+					// 获取其接口添加到代理工厂中
 					proxyFactory.addInterface(ifc);
 				}
 			}
 		}
 		else {
 			// No proxyTargetClass flag enforced, let's apply our default checks...
+			// 从beanDefinition中获取对应属性判断，是否走cglib代理
 			if (shouldProxyTargetClass(beanClass, beanName)) {
 				proxyFactory.setProxyTargetClass(true);
 			}
 			else {
+				// 检测 beanClass 是否实现了接口，若未实现，则将proxyFactory 的成员变量 proxyTargetClass 设为 true
 				evaluateProxyInterfaces(beanClass, proxyFactory);
 			}
 		}
 
+		// 将不同实现类型的通知，统一封装为Advisor
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
 		proxyFactory.addAdvisors(advisors);
 		proxyFactory.setTargetSource(targetSource);
@@ -483,6 +489,8 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		if (classLoader instanceof SmartClassLoader && classLoader != beanClass.getClassLoader()) {
 			classLoader = ((SmartClassLoader) classLoader).getOriginalClassLoader();
 		}
+
+		// 创建代理对象
 		return proxyFactory.getProxy(classLoader);
 	}
 
@@ -526,6 +534,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Handle prototypes correctly...
 		Advisor[] commonInterceptors = resolveInterceptorNames();
 
+		// 基于配置属性判断，是否将通用拦截器添加到集合中
 		List<Object> allInterceptors = new ArrayList<>();
 		if (specificInterceptors != null) {
 			if (specificInterceptors.length > 0) {
@@ -550,6 +559,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 		Advisor[] advisors = new Advisor[allInterceptors.size()];
 		for (int i = 0; i < allInterceptors.size(); i++) {
+			// 通知类型有3中，1、Advisor，2、MethodInterceptor，3、有适配器能够处理的advice。基于不同类型逻辑封装为Advisor
 			advisors[i] = this.advisorAdapterRegistry.wrap(allInterceptors.get(i));
 		}
 		return advisors;
