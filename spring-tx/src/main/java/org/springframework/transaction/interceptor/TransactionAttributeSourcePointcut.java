@@ -16,15 +16,15 @@
 
 package org.springframework.transaction.interceptor;
 
-import java.io.Serializable;
-import java.lang.reflect.Method;
-
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionManager;
 import org.springframework.util.ObjectUtils;
+
+import java.io.Serializable;
+import java.lang.reflect.Method;
 
 /**
  * Abstract class that implements a Pointcut that matches if the underlying
@@ -37,6 +37,7 @@ import org.springframework.util.ObjectUtils;
 abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
 
 	protected TransactionAttributeSourcePointcut() {
+		// ClassFilter 配置
 		setClassFilter(new TransactionAttributeSourceClassFilter());
 	}
 
@@ -44,6 +45,7 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 	@Override
 	public boolean matches(Method method, Class<?> targetClass) {
 		TransactionAttributeSource tas = getTransactionAttributeSource();
+		// 以注解为例，或解析注解获取里面的值
 		return (tas == null || tas.getTransactionAttribute(method, targetClass) != null);
 	}
 
@@ -86,11 +88,14 @@ abstract class TransactionAttributeSourcePointcut extends StaticMethodMatcherPoi
 
 		@Override
 		public boolean matches(Class<?> clazz) {
+			// 一些特殊的类实现直接返回false
 			if (TransactionalProxy.class.isAssignableFrom(clazz) ||
 					TransactionManager.class.isAssignableFrom(clazz) ||
 					PersistenceExceptionTranslator.class.isAssignableFrom(clazz)) {
 				return false;
 			}
+
+			// 能否解析出事务属性
 			TransactionAttributeSource tas = getTransactionAttributeSource();
 			return (tas == null || tas.isCandidateClass(clazz));
 		}

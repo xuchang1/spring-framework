@@ -16,21 +16,14 @@
 
 package org.springframework.transaction.support;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.OrderComparator;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.util.*;
 
 /**
  * Central delegate that manages resources and transaction synchronizations per thread.
@@ -145,6 +138,7 @@ public abstract class TransactionSynchronizationManager {
 	 */
 	@Nullable
 	private static Object doGetResource(Object actualKey) {
+		// resources 是本地线程级别的
 		Map<Object, Object> map = resources.get();
 		if (map == null) {
 			return null;
@@ -169,6 +163,7 @@ public abstract class TransactionSynchronizationManager {
 	 * @throws IllegalStateException if there is already a value bound to the thread
 	 * @see ResourceTransactionManager#getResourceFactory()
 	 */
+	// DataSource -> ConnectionHolder 的缓存
 	public static void bindResource(Object key, Object value) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		Assert.notNull(value, "Value must not be null");
@@ -198,6 +193,7 @@ public abstract class TransactionSynchronizationManager {
 	 */
 	public static Object unbindResource(Object key) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
+		// 删除缓存
 		Object value = doUnbindResource(actualKey);
 		if (value == null) {
 			throw new IllegalStateException("No value for key [" + actualKey + "] bound to thread");

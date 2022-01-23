@@ -37,6 +37,7 @@ public class BeanFactoryTransactionAttributeSourceAdvisor extends AbstractBeanFa
 	@Nullable
 	private TransactionAttributeSource transactionAttributeSource;
 
+	// 封装切点逻辑，其实就是通过TransactionAttributeSource获取对应的事务注解解析，能获取到则表示会去增强
 	private final TransactionAttributeSourcePointcut pointcut = new TransactionAttributeSourcePointcut() {
 		@Override
 		@Nullable

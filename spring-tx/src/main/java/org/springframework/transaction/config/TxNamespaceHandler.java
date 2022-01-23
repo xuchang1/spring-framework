@@ -37,6 +37,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
  * @author Juergen Hoeller
  * @since 2.0
  */
+// 事务相关标签的解析
 public class TxNamespaceHandler extends NamespaceHandlerSupport {
 
 	static final String TRANSACTION_MANAGER_ATTRIBUTE = "transaction-manager";
@@ -45,6 +46,7 @@ public class TxNamespaceHandler extends NamespaceHandlerSupport {
 
 
 	static String getTransactionManagerName(Element element) {
+		// 如果设置了这个元素则返回其值，不然返回默认值 transactionManager
 		return (element.hasAttribute(TRANSACTION_MANAGER_ATTRIBUTE) ?
 				element.getAttribute(TRANSACTION_MANAGER_ATTRIBUTE) : DEFAULT_TRANSACTION_MANAGER_BEAN_NAME);
 	}

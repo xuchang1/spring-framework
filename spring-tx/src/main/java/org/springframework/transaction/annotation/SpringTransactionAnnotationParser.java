@@ -16,12 +16,6 @@
 
 package org.springframework.transaction.annotation;
 
-import java.io.Serializable;
-import java.lang.reflect.AnnotatedElement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -33,6 +27,12 @@ import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import java.io.Serializable;
+import java.lang.reflect.AnnotatedElement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Strategy implementation for parsing Spring's {@link Transactional} annotation.
  *
@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
  * @since 2.5
  */
 @SuppressWarnings("serial")
+// @Transactional 注解事务属性解析
 public class SpringTransactionAnnotationParser implements TransactionAnnotationParser, Serializable {
 
 	@Override
@@ -66,6 +67,7 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 	}
 
 	protected TransactionAttribute parseTransactionAnnotation(AnnotationAttributes attributes) {
+		// 此处返回的是 RuleBasedTransactionAttribute 类型，rollbackRules属性中缓存了自定义需要回滚异常的逻辑
 		RuleBasedTransactionAttribute rbta = new RuleBasedTransactionAttribute();
 
 		Propagation propagation = attributes.getEnum("propagation");
@@ -80,6 +82,7 @@ public class SpringTransactionAnnotationParser implements TransactionAnnotationP
 		rbta.setTimeoutString(timeoutString);
 
 		rbta.setReadOnly(attributes.getBoolean("readOnly"));
+		// 这个属性中设置了对应的事务管理器的值
 		rbta.setQualifier(attributes.getString("value"));
 		rbta.setLabels(Arrays.asList(attributes.getStringArray("label")));
 

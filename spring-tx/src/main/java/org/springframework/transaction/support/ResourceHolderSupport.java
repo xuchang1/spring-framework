@@ -16,10 +16,10 @@
 
 package org.springframework.transaction.support;
 
-import java.util.Date;
-
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionTimedOutException;
+
+import java.util.Date;
 
 /**
  * Convenient base class for resource holders.
@@ -35,6 +35,9 @@ import org.springframework.transaction.TransactionTimedOutException;
  */
 public abstract class ResourceHolderSupport implements ResourceHolder {
 
+	/**
+	 * 是否被事务同步阻塞
+	 */
 	private boolean synchronizedWithTransaction = false;
 
 	private boolean rollbackOnly = false;

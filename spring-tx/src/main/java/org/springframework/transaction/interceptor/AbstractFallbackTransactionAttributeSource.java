@@ -16,20 +16,19 @@
 
 package org.springframework.transaction.interceptor;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.support.AopUtils;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.MethodClassKey;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringValueResolver;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Abstract implementation of {@link TransactionAttributeSource} that caches
@@ -101,6 +100,7 @@ public abstract class AbstractFallbackTransactionAttributeSource
 	 */
 	@Override
 	@Nullable
+	// 获取事务属性
 	public TransactionAttribute getTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
 		if (method.getDeclaringClass() == Object.class) {
 			return null;
@@ -121,6 +121,7 @@ public abstract class AbstractFallbackTransactionAttributeSource
 		}
 		else {
 			// We need to work it out.
+			// 解析事务属性
 			TransactionAttribute txAttr = computeTransactionAttribute(method, targetClass);
 			// Put it in the cache.
 			if (txAttr == null) {
@@ -128,6 +129,8 @@ public abstract class AbstractFallbackTransactionAttributeSource
 			}
 			else {
 				String methodIdentification = ClassUtils.getQualifiedMethodName(method, targetClass);
+
+				// 什么都没配置，使用默认属性的处理
 				if (txAttr instanceof DefaultTransactionAttribute) {
 					DefaultTransactionAttribute dta = (DefaultTransactionAttribute) txAttr;
 					dta.setDescriptor(methodIdentification);
@@ -136,6 +139,8 @@ public abstract class AbstractFallbackTransactionAttributeSource
 				if (logger.isTraceEnabled()) {
 					logger.trace("Adding transactional method '" + methodIdentification + "' with attribute: " + txAttr);
 				}
+
+				// 进行缓存
 				this.attributeCache.put(cacheKey, txAttr);
 			}
 			return txAttr;
@@ -170,20 +175,25 @@ public abstract class AbstractFallbackTransactionAttributeSource
 
 		// The method may be on an interface, but we need attributes from the target class.
 		// If the target class is null, the method will be unchanged.
+		// 当前类有可能进行了动态代理，此时会返回其原方法
 		Method specificMethod = AopUtils.getMostSpecificMethod(method, targetClass);
 
 		// First try is the method in the target class.
+		// 方法上解析
+		// 解析逻辑的实现，以注解为例，此处就是通过 SpringTransactionAnnotationParser 解析出了 @Transactional 注解中的值
 		TransactionAttribute txAttr = findTransactionAttribute(specificMethod);
 		if (txAttr != null) {
 			return txAttr;
 		}
 
 		// Second try is the transaction attribute on the target class.
+		// 类上解析
 		txAttr = findTransactionAttribute(specificMethod.getDeclaringClass());
 		if (txAttr != null && ClassUtils.isUserLevelMethod(method)) {
 			return txAttr;
 		}
 
+		// 如果不同，说明进行了动态代理，尝试通过代理的方法、类解析
 		if (specificMethod != method) {
 			// Fallback is to look at the original method.
 			txAttr = findTransactionAttribute(method);

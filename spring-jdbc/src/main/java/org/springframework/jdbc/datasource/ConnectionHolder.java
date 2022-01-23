@@ -16,13 +16,13 @@
 
 package org.springframework.jdbc.datasource;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Savepoint;
-
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.ResourceHolderSupport;
 import org.springframework.util.Assert;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Savepoint;
 
 /**
  * Resource holder wrapping a JDBC {@link Connection}.
@@ -55,6 +55,9 @@ public class ConnectionHolder extends ResourceHolderSupport {
 
 	private boolean transactionActive = false;
 
+	/**
+	 * savepoint: 事务回退的保存点，事务回退时，可以回退到指定的保存点。一次事务的生命周期中，可以设置多个保存点。
+	 */
 	@Nullable
 	private Boolean savepointsSupported;
 
